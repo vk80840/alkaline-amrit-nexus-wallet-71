@@ -19,48 +19,48 @@ interface TreeViewTabProps {
 }
 
 const TreeViewTab = ({ user }: TreeViewTabProps) => {
-  // Mock tree data
+  // Generate mock tree data with 10 direct referrals, each with their own network up to level 10
+  const generateMember = (level: number, parentId: string, index: number, side: 'left' | 'right'): TeamMember => {
+    const userId = `AU${String(1000 + level * 100 + index).padStart(5, '0')}`;
+    const names = [
+      'Alice Johnson', 'Bob Smith', 'Carol Davis', 'David Wilson', 'Eva Brown',
+      'Frank Miller', 'Grace Lee', 'Henry Clark', 'Ivy White', 'Jack Taylor',
+      'Kate Anderson', 'Liam Garcia', 'Maya Rodriguez', 'Noah Martinez', 'Olivia Lopez'
+    ];
+    
+    const member: TeamMember = {
+      userId,
+      name: names[index % names.length],
+      level,
+      side,
+      profileImage: index % 3 === 0 ? '/placeholder.svg' : undefined,
+    };
+
+    // Add children if level is less than 10 and we want to show some depth
+    if (level < 4) { // Limiting display depth for performance, but showing more members
+      const childCount = Math.min(level === 1 ? 10 : Math.max(2, 8 - level), 10);
+      member.children = [];
+      
+      for (let i = 0; i < childCount; i++) {
+        const childSide = i % 2 === 0 ? 'left' : 'right';
+        member.children.push(generateMember(level + 1, userId, i, childSide));
+      }
+    }
+
+    return member;
+  };
+
   const treeData: TeamMember = {
     userId: user.userId,
     name: user.name,
     level: 0,
-    side: 'left', // This is the root
+    side: 'left',
     profileImage: user.profileImage,
     children: [
-      {
-        userId: 'AU00003',
-        name: 'Alice Johnson',
-        level: 1,
-        side: 'left',
-        children: [
-          {
-            userId: 'AU00006',
-            name: 'David Wilson',
-            level: 2,
-            side: 'left',
-          },
-          {
-            userId: 'AU00007',
-            name: 'Eva Davis',
-            level: 2,
-            side: 'right',
-          },
-        ],
-      },
-      {
-        userId: 'AU00004',
-        name: 'Bob Smith',
-        level: 1,
-        side: 'right',
-        children: [
-          {
-            userId: 'AU00008',
-            name: 'Frank Miller',
-            level: 2,
-            side: 'left',
-          },
-        ],
-      },
+      // Generate 10 direct referrals
+      ...Array.from({ length: 10 }, (_, i) => 
+        generateMember(1, user.userId, i, i % 2 === 0 ? 'left' : 'right')
+      )
     ],
   };
 
@@ -68,7 +68,7 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
     <div className="flex flex-col items-center">
       <div 
         className={`
-          p-4 rounded-lg border cursor-pointer transition-all hover:shadow-lg
+          p-3 rounded-lg border cursor-pointer transition-all hover:shadow-lg min-w-[120px]
           ${isRoot 
             ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-300' 
             : 'bg-white border-gray-200 hover:bg-gray-50'
@@ -77,24 +77,24 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
       >
         <div className="text-center space-y-2">
           {/* Profile Picture */}
-          <div className="w-12 h-12 mx-auto">
+          <div className="w-10 h-10 mx-auto">
             {member.profileImage ? (
               <img 
                 src={member.profileImage} 
                 alt={member.name}
-                className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
+                className="w-10 h-10 rounded-full object-cover border-2 border-white shadow-md"
               />
             ) : (
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
                 isRoot ? 'bg-white/20' : 'bg-gray-200'
               }`}>
-                <UserIcon className={`h-6 w-6 ${isRoot ? 'text-white' : 'text-gray-600'}`} />
+                <UserIcon className={`h-5 w-5 ${isRoot ? 'text-white' : 'text-gray-600'}`} />
               </div>
             )}
           </div>
           
           <div>
-            <p className={`font-semibold text-sm ${isRoot ? 'text-white' : 'text-gray-900'}`}>
+            <p className={`font-semibold text-xs ${isRoot ? 'text-white' : 'text-gray-900'}`}>
               {member.name}
             </p>
             <p className={`text-xs ${isRoot ? 'text-blue-100' : 'text-gray-600'}`}>
@@ -103,7 +103,7 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
             {!isRoot && (
               <div className="mt-1 space-y-1">
                 <Badge variant="outline" className="text-xs">
-                  Level {member.level}
+                  L{member.level}
                 </Badge>
                 <Badge 
                   variant="outline" 
@@ -113,7 +113,7 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
                       : 'bg-blue-50 text-blue-700 border-blue-200'
                   }`}
                 >
-                  {member.side}
+                  {member.side === 'left' ? 'L' : 'R'}
                 </Badge>
               </div>
             )}
@@ -122,23 +122,25 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
       </div>
 
       {member.children && member.children.length > 0 && (
-        <div className="mt-4 flex space-x-8">
-          {member.children.map((child) => (
-            <div key={child.userId} className="relative">
-              {/* Connection line */}
-              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 w-0.5 h-4 bg-gray-300"></div>
-              <TreeNode member={child} />
-            </div>
-          ))}
+        <div className="mt-4">
+          {/* Connection line */}
+          <div className="w-0.5 h-4 bg-gray-300 mx-auto mb-4"></div>
+          <div className="flex flex-wrap justify-center gap-4 max-w-[800px]">
+            {member.children.map((child, index) => (
+              <div key={child.userId} className="relative">
+                <TreeNode member={child} />
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
 
   const teamStats = {
-    totalMembers: user.totalTeam + 1, // Including self
-    leftTeam: 22,
-    rightTeam: 23,
+    totalMembers: 156, // Updated to reflect larger network
+    leftTeam: 78,
+    rightTeam: 78,
   };
 
   return (
@@ -176,7 +178,7 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-gray-900">Team Tree View</CardTitle>
-              <CardDescription>Hierarchical view of your referral network</CardDescription>
+              <CardDescription>Hierarchical view of your referral network (showing 4 levels)</CardDescription>
             </div>
             <div className="flex space-x-2">
               <Button variant="outline" size="sm">
@@ -199,10 +201,11 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
             <h4 className="font-semibold text-blue-800 mb-2">Tree View Instructions:</h4>
             <ul className="text-sm text-blue-700 space-y-1">
               <li>• Click on any member to view their detailed information</li>
-              <li>• The tree shows up to 10 levels of your referral network</li>
-              <li>• Left and right sides are clearly marked with colored badges</li>
+              <li>• The tree shows your complete referral network up to 10 levels</li>
+              <li>• L/R badges indicate left and right sides of the binary tree</li>
               <li>• Profile pictures are displayed for visual identification</li>
               <li>• Use zoom controls for better navigation of large teams</li>
+              <li>• Each member can have up to 10 direct referrals</li>
             </ul>
           </div>
         </CardContent>

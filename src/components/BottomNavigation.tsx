@@ -16,7 +16,7 @@ const BottomNavigation = ({ activeTab, setActiveTab }: BottomNavigationProps) =>
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-lg border-t border-white/20 shadow-lg z-40">
+    <div className="fixed bottom-0 left-0 right-0 bg-white/10 backdrop-blur-lg border-t border-white/10 shadow-lg z-40">
       <div className="grid grid-cols-4 gap-1 p-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
@@ -25,18 +25,28 @@ const BottomNavigation = ({ activeTab, setActiveTab }: BottomNavigationProps) =>
           return (
             <Button
               key={tab.id}
-              variant={isActive ? "default" : "ghost"}
+              variant="ghost"
               className={`
-                flex flex-col items-center space-y-1 h-16 transition-all duration-200
+                flex flex-col items-center space-y-1 h-16 transition-all duration-300 bg-transparent
                 ${isActive 
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                  ? 'text-blue-500' 
+                  : 'text-gray-600 hover:text-gray-900'
                 }
               `}
               onClick={() => setActiveTab(tab.id)}
             >
-              <Icon className="h-5 w-5" />
-              <span className="text-xs font-medium">{tab.label}</span>
+              <Icon className={`h-5 w-5 transition-all duration-300 ${
+                isActive 
+                  ? 'drop-shadow-[0_0_8px_rgba(59,130,246,0.5)] filter brightness-110' 
+                  : ''
+              }`} />
+              <span className={`text-xs font-medium transition-all duration-300 ${
+                isActive 
+                  ? 'text-blue-500 drop-shadow-[0_0_4px_rgba(59,130,246,0.3)]' 
+                  : ''
+              }`}>
+                {tab.label}
+              </span>
             </Button>
           );
         })}

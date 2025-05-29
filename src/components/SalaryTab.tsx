@@ -3,7 +3,7 @@ import { User } from '../types/user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Award, TrendingUp, Lock, CheckCircle, Calendar } from 'lucide-react';
+import { Award, TrendingUp, Lock, CheckCircle, Calendar, Crown } from 'lucide-react';
 
 interface SalaryTabProps {
   user: User;
@@ -20,108 +20,107 @@ const SalaryTab = ({ user }: SalaryTabProps) => {
     salaryStatus: 'unlocked',
   };
 
-  // Salary slabs with corrected BV requirements
+  // Updated salary slabs with new BV requirements
   const salarySlabs = [
     {
       level: 1,
-      bvRequired: '10K-10K',
+      bvRequired: '10K-25K',
       salary: 250,
       eligible: true,
       current: false,
     },
     {
       level: 2,
-      bvRequired: '25K-25K',
+      bvRequired: '25K-60K',
       salary: 500,
       eligible: true,
       current: false,
     },
     {
       level: 3,
-      bvRequired: '50K-50K', // Fixed: Changed from 60K to 50K to match 58K balanced
+      bvRequired: '60K-150K',
       salary: 1000,
-      eligible: true,
-      current: true,
+      eligible: false,
+      current: false,
     },
     {
       level: 4,
-      bvRequired: '100K-100K', // Fixed: Adjusted from 150K to 100K
+      bvRequired: '150K-350K',
       salary: 2000,
       eligible: false,
       current: false,
     },
     {
       level: 5,
-      bvRequired: '250K-250K',
+      bvRequired: '350K-1M',
       salary: 4000,
       eligible: false,
       current: false,
     },
     {
       level: 6,
-      bvRequired: '500K-500K',
+      bvRequired: '1M-2.5M',
       salary: 8000,
       eligible: false,
       current: false,
     },
     {
       level: 7,
-      bvRequired: '1M-1M',
+      bvRequired: '2.5M-6M',
       salary: 20000,
       eligible: false,
       current: false,
     },
     {
       level: 8,
-      bvRequired: '2M-2M',
+      bvRequired: '6M-20M',
       salary: 40000,
       eligible: false,
       current: false,
     },
     {
       level: 9,
-      bvRequired: '5M-5M',
+      bvRequired: '20M-50M',
       salary: 100000,
       eligible: false,
       current: false,
     },
     {
       level: 10,
-      bvRequired: '10M+',
-      salary: 200000,
+      bvRequired: '50M+',
+      salary: 100000,
       eligible: false,
       current: false,
     },
+    {
+      level: 11,
+      bvRequired: 'Special CTO',
+      salary: '2% Level',
+      eligible: false,
+      current: false,
+      special: true,
+    },
   ];
 
-  // Mock salary history
+  // Mock salary history with updated BV requirements
   const salaryHistory = [
     {
       id: '1',
       month: 'January 2024',
-      balancedBV: '58K-58K', // Updated to reflect current balanced BV
-      level: 3,
-      amount: 1000,
+      balancedBV: '25K-60K', // Updated to reflect Level 2
+      level: 2,
+      amount: 500,
       status: 'paid',
       date: '2024-01-30',
     },
     {
       id: '2',
       month: 'December 2023',
-      balancedBV: '25K-25K',
-      level: 2,
-      amount: 500,
-      status: 'paid',
-      date: '2023-12-30',
-    },
-    {
-      id: '3',
-      month: 'November 2023',
-      balancedBV: '10K-10K',
+      balancedBV: '10K-25K',
       level: 1,
       amount: 250,
       status: 'paid',
-      date: '2023-11-30',
+      date: '2023-12-30',
     },
   ];
 
@@ -131,7 +130,7 @@ const SalaryTab = ({ user }: SalaryTabProps) => {
     balanced: Math.min(62000, 58000), // 58K balanced
   };
 
-  const nextLevelProgress = (currentBVBalance.balanced / 100000) * 100; // Progress to Level 4 (100K)
+  const nextLevelProgress = (currentBVBalance.balanced / 60000) * 100; // Progress to Level 3 (60K)
 
   return (
     <div className="space-y-6">
@@ -196,12 +195,12 @@ const SalaryTab = ({ user }: SalaryTabProps) => {
 
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Progress to Level 4 (100K-100K BV)</span>
+              <span className="text-sm text-gray-600">Progress to Level 3 (60K-150K BV)</span>
               <span className="font-semibold">{nextLevelProgress.toFixed(1)}%</span>
             </div>
             <Progress value={nextLevelProgress} className="h-3" />
             <p className="text-sm text-gray-500 text-center">
-              {currentBVBalance.balanced.toLocaleString()} / 100,000 BV balanced required for next level
+              {currentBVBalance.balanced.toLocaleString()} / 60,000 BV balanced required for next level
             </p>
           </div>
         </CardContent>
@@ -223,25 +222,35 @@ const SalaryTab = ({ user }: SalaryTabProps) => {
                     ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-300' 
                     : slab.eligible 
                       ? 'bg-green-50 border-green-200' 
-                      : 'bg-gray-50 border-gray-200'
+                      : slab.special
+                        ? 'bg-gradient-to-br from-purple-50 to-pink-50 border-purple-200'
+                        : 'bg-gray-50 border-gray-200'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <Badge variant={slab.eligible ? "default" : "secondary"}>
-                    Level {slab.level}
+                  <Badge variant={slab.eligible ? "default" : "secondary"} className={slab.special ? "bg-purple-100 text-purple-800 border-purple-200" : ""}>
+                    {slab.special ? (
+                      <div className="flex items-center space-x-1">
+                        <Crown className="h-3 w-3" />
+                        <span>Level {slab.level}</span>
+                      </div>
+                    ) : (
+                      `Level ${slab.level}`
+                    )}
                   </Badge>
                   {slab.current && <Badge className="bg-blue-100 text-blue-800 border-blue-200">Current</Badge>}
                   {slab.eligible && !slab.current && <CheckCircle className="h-4 w-4 text-green-500" />}
-                  {!slab.eligible && <Lock className="h-4 w-4 text-gray-400" />}
+                  {!slab.eligible && !slab.special && <Lock className="h-4 w-4 text-gray-400" />}
+                  {slab.special && <Crown className="h-4 w-4 text-purple-500" />}
                 </div>
                 
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-gray-700">{slab.bvRequired} BV</p>
                   <p className="text-lg font-bold text-green-600">
-                    ₹{slab.salary.toLocaleString()}
+                    {typeof slab.salary === 'number' ? `₹${slab.salary.toLocaleString()}` : slab.salary}
                   </p>
                   <Badge variant={slab.eligible ? "default" : "outline"} className="text-xs">
-                    {slab.eligible ? 'Eligible' : 'Locked'}
+                    {slab.special ? 'Special' : slab.eligible ? 'Eligible' : 'Locked'}
                   </Badge>
                 </div>
               </div>

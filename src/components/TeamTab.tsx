@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { User } from '../types/user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -75,6 +76,31 @@ const TeamTab = ({ user }: TeamTabProps) => {
     setSpreadsheetData(mockTeamData[type]);
     setShowSpreadsheet(true);
   };
+
+  // Mock direct team data
+  const directTeam = [
+    {
+      userId: 'AU00003',
+      name: 'Alice Johnson',
+      joinDate: '2024-01-10',
+      purchased: true,
+      amount: 15000,
+    },
+    {
+      userId: 'AU00004',
+      name: 'Bob Smith',
+      joinDate: '2024-01-12',
+      purchased: true,
+      amount: 8000,
+    },
+    {
+      userId: 'AU00005',
+      name: 'Charlie Brown',
+      joinDate: '2024-01-15',
+      purchased: false,
+      amount: 0,
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -246,30 +272,6 @@ const TeamTab = ({ user }: TeamTabProps) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {/* Mock direct team data */}
-            const directTeam = [
-              {
-                userId: 'AU00003',
-                name: 'Alice Johnson',
-                joinDate: '2024-01-10',
-                purchased: true,
-                amount: 15000,
-              },
-              {
-                userId: 'AU00004',
-                name: 'Bob Smith',
-                joinDate: '2024-01-12',
-                purchased: true,
-                amount: 8000,
-              },
-              {
-                userId: 'AU00005',
-                name: 'Charlie Brown',
-                joinDate: '2024-01-15',
-                purchased: false,
-                amount: 0,
-              },
-            ];
             {directTeam.map((member) => (
               <div 
                 key={member.userId}

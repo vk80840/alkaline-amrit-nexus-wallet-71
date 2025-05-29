@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { User } from '../types/user';
 import Sidebar from './Sidebar';
 import Header from './Header';

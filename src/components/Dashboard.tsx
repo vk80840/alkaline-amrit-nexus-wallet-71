@@ -63,12 +63,14 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 flex">
-      {/* Background Pattern */}
+    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 flex">
+      {/* Animated Background */}
       <div 
-        className="fixed inset-0 pointer-events-none"
+        className="fixed inset-0 pointer-events-none opacity-30"
         style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M0 0h20v20H0zm20 20h20v20H20z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+          backgroundImage: `radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.3) 0%, transparent 50%), 
+                           radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
+                           linear-gradient(45deg, rgba(236, 72, 153, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)`
         }}
       ></div>
       
@@ -83,7 +85,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
       />
 
       {/* Main Content */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${
+      <div className={`flex-1 flex flex-col transition-all duration-300 min-w-0 ${
         isMobile ? 'ml-0' : sidebarOpen ? 'ml-64' : 'ml-16'
       }`}>
         <Header 
@@ -92,8 +94,10 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
           onLogout={onLogout}
         />
         
-        <main className="flex-1 p-4 pb-20 md:pb-4 overflow-auto">
-          {renderActiveTab()}
+        <main className="flex-1 p-3 md:p-6 pb-20 md:pb-6 overflow-auto">
+          <div className="max-w-7xl mx-auto w-full">
+            {renderActiveTab()}
+          </div>
         </main>
       </div>
 

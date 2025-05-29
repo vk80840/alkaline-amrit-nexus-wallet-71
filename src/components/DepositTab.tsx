@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { ArrowDown, Clock, CheckCircle, XCircle, Copy } from 'lucide-react';
+import { ArrowDown, Clock, CheckCircle, XCircle, Copy, QrCode } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface DepositTabProps {
@@ -88,13 +88,13 @@ const DepositTab = ({ user }: DepositTabProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'pending':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'rejected':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
@@ -102,10 +102,10 @@ const DepositTab = ({ user }: DepositTabProps) => {
     <div className="space-y-6">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Deposit Form */}
-        <Card className="bg-white/60 backdrop-blur-lg border-white/30 shadow-xl">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <ArrowDown className="mr-2 h-5 w-5" />
+            <CardTitle className="flex items-center text-gray-900">
+              <ArrowDown className="mr-2 h-5 w-5 text-green-600" />
               Add Funds
             </CardTitle>
             <CardDescription>
@@ -128,10 +128,21 @@ const DepositTab = ({ user }: DepositTabProps) => {
               </div>
 
               {method && (
-                <div className="p-4 bg-gradient-to-r from-blue-500/20 to-purple-500/20 rounded-lg">
+                <div className="p-4 bg-gray-50 rounded-lg border border-gray-200">
                   {method === 'bank' ? (
-                    <div>
-                      <h4 className="font-semibold mb-2">Bank Details</h4>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-gray-900">Bank Details</h4>
+                        <div className="flex items-center space-x-2">
+                          <QrCode className="h-5 w-5 text-gray-600" />
+                          <span className="text-sm text-gray-600">QR Code</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-center mb-4">
+                        <div className="w-32 h-32 bg-gray-200 border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center">
+                          <QrCode className="h-12 w-12 text-gray-400" />
+                        </div>
+                      </div>
                       <div className="text-sm space-y-1">
                         <p><strong>Account Name:</strong> AlkalineAmrit Pvt Ltd</p>
                         <p><strong>Account Number:</strong> 1234567890</p>
@@ -140,9 +151,20 @@ const DepositTab = ({ user }: DepositTabProps) => {
                       </div>
                     </div>
                   ) : (
-                    <div>
-                      <h4 className="font-semibold mb-2">Crypto Address</h4>
-                      <div className="flex items-center space-x-2 bg-white/50 p-2 rounded">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-gray-900">Crypto Address</h4>
+                        <div className="flex items-center space-x-2">
+                          <QrCode className="h-5 w-5 text-gray-600" />
+                          <span className="text-sm text-gray-600">QR Code</span>
+                        </div>
+                      </div>
+                      <div className="flex justify-center mb-4">
+                        <div className="w-32 h-32 bg-gray-200 border-2 border-dashed border-gray-400 rounded-lg flex items-center justify-center">
+                          <QrCode className="h-12 w-12 text-gray-400" />
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2 bg-white p-2 rounded border border-gray-200">
                         <code className="flex-1 text-xs font-mono">1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa</code>
                         <Button 
                           size="sm" 
@@ -153,7 +175,7 @@ const DepositTab = ({ user }: DepositTabProps) => {
                           <Copy className="h-4 w-4" />
                         </Button>
                       </div>
-                      <p className="text-xs text-gray-600 mt-2">
+                      <p className="text-xs text-gray-600">
                         Send only USDT (TRC20) to this address
                       </p>
                     </div>
@@ -203,7 +225,7 @@ const DepositTab = ({ user }: DepositTabProps) => {
 
               <Button 
                 type="submit" 
-                className="w-full bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700"
+                className="w-full bg-green-600 hover:bg-green-700 text-white"
                 disabled={isSubmitting || !method || !amount || !transactionId || !proofLink}
               >
                 {isSubmitting ? 'Submitting...' : 'Submit Deposit Request'}
@@ -213,9 +235,9 @@ const DepositTab = ({ user }: DepositTabProps) => {
         </Card>
 
         {/* Deposit History */}
-        <Card className="bg-white/60 backdrop-blur-lg border-white/30 shadow-xl">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle>Deposit History</CardTitle>
+            <CardTitle className="text-gray-900">Deposit History</CardTitle>
             <CardDescription>Your recent deposit requests</CardDescription>
           </CardHeader>
           <CardContent>
@@ -223,12 +245,12 @@ const DepositTab = ({ user }: DepositTabProps) => {
               {depositHistory.map((deposit) => (
                 <div 
                   key={deposit.id} 
-                  className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-white/20"
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
                 >
                   <div className="flex items-center space-x-3">
                     {getStatusIcon(deposit.status)}
                     <div>
-                      <p className="font-medium">₹{deposit.amount.toLocaleString()}</p>
+                      <p className="font-medium text-gray-900">₹{deposit.amount.toLocaleString()}</p>
                       <p className="text-xs text-gray-500">{deposit.date}</p>
                     </div>
                   </div>

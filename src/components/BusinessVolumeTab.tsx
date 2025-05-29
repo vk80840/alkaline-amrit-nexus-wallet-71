@@ -3,7 +3,7 @@ import { User } from '../types/user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { TrendingUp, Calendar, Award, Clock } from 'lucide-react';
+import { TrendingUp, Award, Clock } from 'lucide-react';
 
 interface BusinessVolumeTabProps {
   user: User;
@@ -88,9 +88,9 @@ const BusinessVolumeTab = ({ user }: BusinessVolumeTabProps) => {
   ];
 
   const getExpiryStatus = (daysLeft: number) => {
-    if (daysLeft <= 30) return 'bg-red-100 text-red-800';
-    if (daysLeft <= 90) return 'bg-yellow-100 text-yellow-800';
-    return 'bg-green-100 text-green-800';
+    if (daysLeft <= 30) return 'bg-red-100 text-red-800 border-red-200';
+    if (daysLeft <= 90) return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    return 'bg-green-100 text-green-800 border-green-200';
   };
 
   const getExpiryLabel = (daysLeft: number) => {
@@ -103,44 +103,44 @@ const BusinessVolumeTab = ({ user }: BusinessVolumeTabProps) => {
     <div className="space-y-6">
       {/* BV Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-lg border-white/30">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4 text-center">
-            <TrendingUp className="mx-auto h-8 w-8 text-blue-500 mb-2" />
+            <TrendingUp className="mx-auto h-8 w-8 text-blue-600 mb-2" />
             <p className="text-sm text-gray-600">Total BV</p>
-            <p className="text-xl font-bold">{bvData.totalBV.toLocaleString()}</p>
+            <p className="text-xl font-bold text-gray-900">{bvData.totalBV.toLocaleString()}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-500/20 to-blue-500/20 backdrop-blur-lg border-white/30">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4 text-center">
-            <Award className="mx-auto h-8 w-8 text-green-500 mb-2" />
+            <Award className="mx-auto h-8 w-8 text-green-600 mb-2" />
             <p className="text-sm text-gray-600">Active BV</p>
-            <p className="text-xl font-bold">{bvData.activeBV.toLocaleString()}</p>
+            <p className="text-xl font-bold text-gray-900">{bvData.activeBV.toLocaleString()}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-lg border-white/30">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4 text-center">
-            <TrendingUp className="mx-auto h-8 w-8 text-purple-500 mb-2" />
+            <TrendingUp className="mx-auto h-8 w-8 text-purple-600 mb-2" />
             <p className="text-sm text-gray-600">Left Team</p>
-            <p className="text-xl font-bold">{bvData.leftTeam.toLocaleString()}</p>
+            <p className="text-xl font-bold text-gray-900">{bvData.leftTeam.toLocaleString()}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-lg border-white/30">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardContent className="p-4 text-center">
-            <TrendingUp className="mx-auto h-8 w-8 text-orange-500 mb-2" />
+            <TrendingUp className="mx-auto h-8 w-8 text-orange-600 mb-2" />
             <p className="text-sm text-gray-600">Right Team</p>
-            <p className="text-xl font-bold">{bvData.rightTeam.toLocaleString()}</p>
+            <p className="text-xl font-bold text-gray-900">{bvData.rightTeam.toLocaleString()}</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Monthly Progress */}
-      <Card className="bg-white/60 backdrop-blur-lg border-white/30 shadow-xl">
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <Calendar className="mr-2 h-5 w-5" />
+          <CardTitle className="flex items-center text-gray-900">
+            <TrendingUp className="mr-2 h-5 w-5 text-blue-600" />
             Monthly Progress
           </CardTitle>
           <CardDescription>Your BV accumulation progress this month</CardDescription>
@@ -148,24 +148,20 @@ const BusinessVolumeTab = ({ user }: BusinessVolumeTabProps) => {
         <CardContent>
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">This Month's Goal</span>
-              <span className="font-semibold">10,000 BV</span>
-            </div>
-            <Progress value={bvData.monthlyProgress} className="h-3" />
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-600">Progress: {bvData.monthlyProgress}%</span>
+              <span className="text-sm text-gray-600">Progress: {bvData.monthlyProgress}%</span>
               <span className="text-gray-600">
-                {Math.floor(10000 * (bvData.monthlyProgress / 100)).toLocaleString()} / 10,000 BV
+                {Math.floor(10000 * (bvData.monthlyProgress / 100)).toLocaleString()} BV earned this month
               </span>
             </div>
+            <Progress value={bvData.monthlyProgress} className="h-3" />
           </div>
         </CardContent>
       </Card>
 
       {/* BV Breakdown */}
-      <Card className="bg-white/60 backdrop-blur-lg border-white/30 shadow-xl">
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle>BV Breakdown & Expiry</CardTitle>
+          <CardTitle className="text-gray-900">BV Breakdown & Expiry</CardTitle>
           <CardDescription>Track when your BV credits expire (12 months from credit date)</CardDescription>
         </CardHeader>
         <CardContent>
@@ -173,12 +169,12 @@ const BusinessVolumeTab = ({ user }: BusinessVolumeTabProps) => {
             {bvBreakdown.map((bv) => (
               <div 
                 key={bv.id}
-                className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-white/20"
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
               >
                 <div className="flex items-center space-x-3">
                   <Clock className="h-5 w-5 text-gray-500" />
                   <div>
-                    <p className="font-medium">{bv.amount.toLocaleString()} BV</p>
+                    <p className="font-medium text-gray-900">{bv.amount.toLocaleString()} BV</p>
                     <p className="text-sm text-gray-600">From: {bv.referrer}</p>
                     <p className="text-xs text-gray-500">Expires: {bv.expiryDate}</p>
                   </div>
@@ -198,9 +194,9 @@ const BusinessVolumeTab = ({ user }: BusinessVolumeTabProps) => {
       </Card>
 
       {/* BV History */}
-      <Card className="bg-white/60 backdrop-blur-lg border-white/30 shadow-xl">
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle>BV History</CardTitle>
+          <CardTitle className="text-gray-900">BV History</CardTitle>
           <CardDescription>Recent BV credits from your network</CardDescription>
         </CardHeader>
         <CardContent>
@@ -208,12 +204,12 @@ const BusinessVolumeTab = ({ user }: BusinessVolumeTabProps) => {
             {bvHistory.map((entry) => (
               <div 
                 key={entry.id}
-                className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-white/20"
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
               >
                 <div className="flex items-center space-x-3">
-                  <Award className="h-5 w-5 text-blue-500" />
+                  <Award className="h-5 w-5 text-blue-600" />
                   <div>
-                    <p className="font-medium">{entry.type}</p>
+                    <p className="font-medium text-gray-900">{entry.type}</p>
                     <p className="text-sm text-gray-600">From: {entry.source}</p>
                     <p className="text-xs text-gray-500">{entry.date}</p>
                   </div>

@@ -8,14 +8,15 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Wallet, ArrowUp, ArrowDown, RefreshCw, Send, Plus, Minus } from 'lucide-react';
+import { Wallet, ArrowUp, ArrowDown, RefreshCw, Send } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface WalletTabProps {
   user: User;
+  setActiveTab: (tab: string) => void;
 }
 
-const WalletTab = ({ user }: WalletTabProps) => {
+const WalletTab = ({ user, setActiveTab }: WalletTabProps) => {
   const [topupAmount, setTopupAmount] = useState('');
   const [topupTarget, setTopupTarget] = useState('self');
   const [transferUserId, setTransferUserId] = useState('');
@@ -123,10 +124,10 @@ const WalletTab = ({ user }: WalletTabProps) => {
     <div className="space-y-6">
       {/* Balance Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-gradient-to-br from-green-500/20 to-blue-500/20 backdrop-blur-lg border-white/30 shadow-xl">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Wallet className="mr-2 h-5 w-5" />
+            <CardTitle className="flex items-center text-gray-900">
+              <Wallet className="mr-2 h-5 w-5 text-green-600" />
               Main Balance
             </CardTitle>
             <CardDescription>Withdrawable balance</CardDescription>
@@ -139,10 +140,10 @@ const WalletTab = ({ user }: WalletTabProps) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-lg border-white/30 shadow-xl">
+        <Card className="bg-white border border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <Wallet className="mr-2 h-5 w-5" />
+            <CardTitle className="flex items-center text-gray-900">
+              <Wallet className="mr-2 h-5 w-5 text-blue-600" />
               Top-up Balance
             </CardTitle>
             <CardDescription>Shopping balance</CardDescription>
@@ -158,47 +159,29 @@ const WalletTab = ({ user }: WalletTabProps) => {
 
       {/* Action Buttons */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="h-16 bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700">
-              <div className="text-center">
-                <ArrowDown className="h-6 w-6 mx-auto mb-1" />
-                <span>Deposit</span>
-              </div>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Quick Deposit</DialogTitle>
-              <DialogDescription>
-                This will redirect you to the deposit tab
-              </DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
+        <Button 
+          className="h-16 bg-green-600 hover:bg-green-700 text-white"
+          onClick={() => setActiveTab('deposit')}
+        >
+          <div className="text-center">
+            <ArrowDown className="h-6 w-6 mx-auto mb-1" />
+            <span>Deposit</span>
+          </div>
+        </Button>
+
+        <Button 
+          className="h-16 bg-red-600 hover:bg-red-700 text-white"
+          onClick={() => setActiveTab('withdraw')}
+        >
+          <div className="text-center">
+            <ArrowUp className="h-6 w-6 mx-auto mb-1" />
+            <span>Withdraw</span>
+          </div>
+        </Button>
 
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="h-16 bg-gradient-to-r from-red-500 to-pink-600 hover:from-red-600 hover:to-pink-700">
-              <div className="text-center">
-                <ArrowUp className="h-6 w-6 mx-auto mb-1" />
-                <span>Withdraw</span>
-              </div>
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Quick Withdraw</DialogTitle>
-              <DialogDescription>
-                This will redirect you to the withdraw tab
-              </DialogDescription>
-            </DialogHeader>
-          </DialogContent>
-        </Dialog>
-
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button className="h-16 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700">
+            <Button className="h-16 bg-blue-600 hover:bg-blue-700 text-white">
               <div className="text-center">
                 <RefreshCw className="h-6 w-6 mx-auto mb-1" />
                 <span>Top-up</span>
@@ -271,7 +254,7 @@ const WalletTab = ({ user }: WalletTabProps) => {
 
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="h-16 bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-600 hover:to-red-700">
+            <Button className="h-16 bg-purple-600 hover:bg-purple-700 text-white">
               <div className="text-center">
                 <Send className="h-6 w-6 mx-auto mb-1" />
                 <span>Transfer</span>
@@ -282,7 +265,7 @@ const WalletTab = ({ user }: WalletTabProps) => {
             <DialogHeader>
               <DialogTitle>Transfer to User</DialogTitle>
               <DialogDescription>
-                Send money to another user (6% charge + 2% TDS applied)
+                Send money to another user (8% charge applied)
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4 pt-4">
@@ -335,9 +318,9 @@ const WalletTab = ({ user }: WalletTabProps) => {
       </div>
 
       {/* Transaction History */}
-      <Card className="bg-white/60 backdrop-blur-lg border-white/30 shadow-xl">
+      <Card className="bg-white border border-gray-200 shadow-sm">
         <CardHeader>
-          <CardTitle>Transaction History</CardTitle>
+          <CardTitle className="text-gray-900">Transaction History</CardTitle>
           <CardDescription>Your recent wallet transactions</CardDescription>
         </CardHeader>
         <CardContent>
@@ -345,12 +328,12 @@ const WalletTab = ({ user }: WalletTabProps) => {
             {transactions.map((transaction) => (
               <div 
                 key={transaction.id} 
-                className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-white/20"
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
               >
                 <div className="flex items-center space-x-3">
                   {getTransactionIcon(transaction.type)}
                   <div>
-                    <p className="font-medium capitalize">{transaction.type}</p>
+                    <p className="font-medium capitalize text-gray-900">{transaction.type}</p>
                     <p className="text-sm text-gray-600">{transaction.description}</p>
                     <p className="text-xs text-gray-500">{transaction.date}</p>
                   </div>

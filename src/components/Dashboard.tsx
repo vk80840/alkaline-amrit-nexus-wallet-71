@@ -38,7 +38,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
       case 'deposit':
         return <DepositTab user={user} />;
       case 'wallet':
-        return <WalletTab user={user} />;
+        return <WalletTab user={user} setActiveTab={setActiveTab} />;
       case 'profile':
         return <ProfileTab user={user} />;
       case 'team':
@@ -63,17 +63,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
   };
 
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-purple-50 via-blue-50 to-cyan-50 flex">
-      {/* Animated Background */}
-      <div 
-        className="fixed inset-0 pointer-events-none opacity-30"
-        style={{
-          backgroundImage: `radial-gradient(circle at 25% 25%, rgba(139, 92, 246, 0.3) 0%, transparent 50%), 
-                           radial-gradient(circle at 75% 75%, rgba(59, 130, 246, 0.3) 0%, transparent 50%),
-                           linear-gradient(45deg, rgba(236, 72, 153, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%)`
-        }}
-      ></div>
-      
+    <div className="min-h-screen w-full overflow-x-hidden bg-gray-50 flex">
       {/* Sidebar */}
       <Sidebar 
         user={user}
@@ -92,6 +82,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
           user={user}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
           onLogout={onLogout}
+          setActiveTab={setActiveTab}
         />
         
         <main className="flex-1 p-3 md:p-6 pb-20 md:pb-6 overflow-auto">

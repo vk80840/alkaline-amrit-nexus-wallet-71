@@ -1,329 +1,260 @@
 
-import React from 'react';
 import { User } from '../types/user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { 
   User as UserIcon, 
   Mail, 
   Phone, 
   Calendar, 
-  DollarSign, 
-  Users, 
+  Wallet,
+  Users,
   TrendingUp,
   Award,
-  Copy,
-  ExternalLink,
-  Shield,
-  Star
+  Gift,
+  CheckCircle,
+  Clock,
+  XCircle
 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
 
 interface DashboardContentProps {
   user: User;
 }
 
 const DashboardContent = ({ user }: DashboardContentProps) => {
-  const copyToClipboard = (text: string, type: string) => {
-    navigator.clipboard.writeText(text);
-    toast({
-      title: "Copied!",
-      description: `${type} copied to clipboard`,
-    });
+  const kycStatusColor = {
+    verified: 'bg-green-100 text-green-800 border-green-200',
+    pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    rejected: 'bg-red-100 text-red-800 border-red-200'
   };
 
-  const ranks = [
-    { name: 'Wood', required: 0, image: '🪵' },
-    { name: 'Silver', required: 50000, image: '🥈' },
-    { name: 'Gold', required: 100000, image: '🥇' },
-    { name: 'Platinum', required: 250000, image: '💎' },
-    { name: 'Diamond', required: 500000, image: '💍' },
-    { name: 'Ruby', required: 1000000, image: '💎' }
-  ];
+  const kycStatusIcon = {
+    verified: <CheckCircle className="h-4 w-4" />,
+    pending: <Clock className="h-4 w-4" />,
+    rejected: <XCircle className="h-4 w-4" />
+  };
 
-  const currentRankIndex = ranks.findIndex(rank => rank.name === user.rank);
-  const nextRank = ranks[currentRankIndex + 1];
-  const progress = nextRank ? (user.businessVolume / nextRank.required) * 100 : 100;
+  const generatedBV = 1250; // Generated BV to referrer
 
   return (
     <div className="space-y-6">
-      {/* Profile Overview */}
-      <Card className="bg-gradient-to-r from-blue-600/10 to-purple-600/10 backdrop-blur-lg border-blue-200/30 shadow-xl">
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-6 text-white shadow-lg">
+        <h1 className="text-2xl font-bold mb-2">Welcome back, {user.name}! 👋</h1>
+        <p className="text-blue-100">Here's your business overview for today</p>
+      </div>
+
+      {/* Personal Information */}
+      <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader>
-          <CardTitle className="flex items-center text-2xl font-bold text-gray-800">
-            <UserIcon className="mr-3 h-8 w-8 text-blue-600" />
-            Profile Overview
+          <CardTitle className="flex items-center text-gray-900">
+            <UserIcon className="mr-2 h-5 w-5 text-blue-600" />
+            Personal Information
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div className="space-y-4">
-              <div className="flex items-center justify-center">
-                <div className="w-24 h-24 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-2xl font-bold">
-                  {user.profileImage ? (
-                    <img src={user.profileImage} alt={user.name} className="w-24 h-24 rounded-full object-cover" />
-                  ) : (
-                    user.name.charAt(0).toUpperCase()
-                  )}
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+              <UserIcon className="h-5 w-5 text-gray-600" />
+              <div>
+                <p className="text-sm text-gray-600">User ID</p>
+                <p className="font-semibold text-gray-900">{user.userId}</p>
               </div>
-              <div className="text-center">
-                <h3 className="text-xl font-bold text-gray-800">{user.name}</h3>
-                <Badge className={`mt-1 ${user.kycStatus === 'verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                  <Shield className="mr-1 h-3 w-3" />
-                  KYC: {user.kycStatus}
+            </div>
+            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+              <Mail className="h-5 w-5 text-gray-600" />
+              <div>
+                <p className="text-sm text-gray-600">Email</p>
+                <p className="font-semibold text-gray-900">{user.email}</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+              <Phone className="h-5 w-5 text-gray-600" />
+              <div>
+                <p className="text-sm text-gray-600">Mobile</p>
+                <p className="font-semibold text-gray-900">{user.mobile}</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+              <Calendar className="h-5 w-5 text-gray-600" />
+              <div>
+                <p className="text-sm text-gray-600">Joined Date</p>
+                <p className="font-semibold text-gray-900">{user.joinDate}</p>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center">
+                {kycStatusIcon[user.kycStatus]}
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">KYC Status</p>
+                <Badge className={kycStatusColor[user.kycStatus]}>
+                  {user.kycStatus}
                 </Badge>
               </div>
             </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <UserIcon className="h-5 w-5 text-blue-600" />
-                <div>
-                  <p className="text-sm text-gray-600">User ID</p>
-                  <p className="font-semibold text-gray-800">{user.userId}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Mail className="h-5 w-5 text-green-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Email</p>
-                  <p className="font-semibold text-gray-800">{user.email}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Phone className="h-5 w-5 text-purple-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Mobile</p>
-                  <p className="font-semibold text-gray-800">{user.mobile}</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="flex items-center space-x-3">
-                <Calendar className="h-5 w-5 text-orange-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Joined Date</p>
-                  <p className="font-semibold text-gray-800">{user.joinDate}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <Award className="h-5 w-5 text-yellow-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Current Rank</p>
-                  <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white">
-                    <Star className="mr-1 h-3 w-3" />
-                    {user.rank}
-                  </Badge>
-                </div>
-              </div>
-              <div className="flex items-center space-x-3">
-                <DollarSign className="h-5 w-5 text-green-600" />
-                <div>
-                  <p className="text-sm text-gray-600">Salary Level</p>
-                  <p className="font-semibold text-gray-800">Level {currentRankIndex + 1}</p>
-                </div>
+            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+              <Award className="h-5 w-5 text-gray-600" />
+              <div>
+                <p className="text-sm text-gray-600">Current Rank</p>
+                <p className="font-semibold text-gray-900">{user.rank}</p>
               </div>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Financial Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-green-100 to-emerald-100 border-green-200 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-green-700">Main Balance</p>
-                <p className="text-2xl font-bold text-green-800">₹{user.mainBalance.toLocaleString()}</p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-blue-100 to-cyan-100 border-blue-200 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-blue-700">Top-up Balance</p>
-                <p className="text-2xl font-bold text-blue-800">₹{user.topupBalance.toLocaleString()}</p>
-              </div>
-              <DollarSign className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-100 to-pink-100 border-purple-200 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-purple-700">Purchased Amount</p>
-                <p className="text-2xl font-bold text-purple-800">₹{user.purchasedAmount.toLocaleString()}</p>
-              </div>
-              <DollarSign className="h-8 w-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-100 to-red-100 border-orange-200 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-orange-700">Referral Bonus</p>
-                <p className="text-2xl font-bold text-orange-800">₹{user.referralBonus.toLocaleString()}</p>
-              </div>
-              <DollarSign className="h-8 w-8 text-orange-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Team & Business Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <Card className="bg-gradient-to-br from-indigo-100 to-blue-100 border-indigo-200 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-indigo-700">Total Team</p>
-                <p className="text-2xl font-bold text-indigo-800">{user.totalTeam}</p>
-              </div>
-              <Users className="h-8 w-8 text-indigo-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-teal-100 to-green-100 border-teal-200 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-teal-700">Direct Team</p>
-                <p className="text-2xl font-bold text-teal-800">{user.directTeam}</p>
-              </div>
-              <Users className="h-8 w-8 text-teal-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-yellow-100 to-orange-100 border-yellow-200 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-semibold text-yellow-700">Business Volume</p>
-                <p className="text-2xl font-bold text-yellow-800">{user.businessVolume.toLocaleString()}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-yellow-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Referral Section */}
-      <Card className="bg-gradient-to-r from-purple-600/10 to-pink-600/10 backdrop-blur-lg border-purple-200/30 shadow-xl">
+      {/* Financial Overview */}
+      <Card className="bg-white shadow-sm border border-gray-200">
         <CardHeader>
-          <CardTitle className="text-xl font-bold text-gray-800">🔗 Referral Information</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="bg-white/50 rounded-lg p-4 border border-purple-200/50">
-            <p className="text-sm font-semibold text-gray-700 mb-2">Your Referral Code</p>
-            <div className="flex items-center space-x-2">
-              <code className="bg-gray-100 px-3 py-2 rounded-lg font-mono text-lg font-bold text-purple-700">
-                {user.referralCode}
-              </code>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => copyToClipboard(user.referralCode, 'Referral code')}
-                className="hover:bg-purple-50"
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white/50 rounded-lg p-4 border border-purple-200/50">
-              <p className="text-sm font-semibold text-gray-700 mb-2">Left Referral Link</p>
-              <div className="flex items-center space-x-2">
-                <input 
-                  readOnly 
-                  value={`https://alkalineamrit.com/register?ref=${user.referralCode}&side=left`}
-                  className="flex-1 text-xs bg-gray-100 px-2 py-1 rounded border"
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => copyToClipboard(`https://alkalineamrit.com/register?ref=${user.referralCode}&side=left`, 'Left link')}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="bg-white/50 rounded-lg p-4 border border-purple-200/50">
-              <p className="text-sm font-semibold text-gray-700 mb-2">Right Referral Link</p>
-              <div className="flex items-center space-x-2">
-                <input 
-                  readOnly 
-                  value={`https://alkalineamrit.com/register?ref=${user.referralCode}&side=right`}
-                  className="flex-1 text-xs bg-gray-100 px-2 py-1 rounded border"
-                />
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => copyToClipboard(`https://alkalineamrit.com/register?ref=${user.referralCode}&side=right`, 'Right link')}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Rank Progress */}
-      <Card className="bg-gradient-to-r from-yellow-600/10 to-orange-600/10 backdrop-blur-lg border-yellow-200/30 shadow-xl">
-        <CardHeader>
-          <CardTitle className="text-xl font-bold text-gray-800">🏆 Rank Progress</CardTitle>
+          <CardTitle className="flex items-center text-gray-900">
+            <Wallet className="mr-2 h-5 w-5 text-green-600" />
+            Financial Overview
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <span className="text-2xl">{ranks[currentRankIndex]?.image}</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border border-green-200">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-bold text-lg text-gray-800">Current: {user.rank}</p>
-                  {nextRank && (
-                    <p className="text-sm text-gray-600">Next: {nextRank.name}</p>
-                  )}
+                  <p className="text-sm text-green-700">Main Balance</p>
+                  <p className="text-2xl font-bold text-green-800">₹{user.mainBalance.toLocaleString()}</p>
                 </div>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-600">Business Volume</p>
-                <p className="font-bold text-lg">{user.businessVolume.toLocaleString()}</p>
+                <Wallet className="h-8 w-8 text-green-600" />
               </div>
             </div>
-            
-            {nextRank && (
-              <div>
-                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                  <span>Progress to {nextRank.name}</span>
-                  <span>{Math.min(progress, 100).toFixed(1)}%</span>
+            <div className="p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-blue-700">Top-up Balance</p>
+                  <p className="text-2xl font-bold text-blue-800">₹{user.topupBalance.toLocaleString()}</p>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-3">
-                  <div 
-                    className="bg-gradient-to-r from-yellow-400 to-orange-500 h-3 rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(progress, 100)}%` }}
-                  ></div>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Required BV: {nextRank.required.toLocaleString()} | Remaining: {Math.max(0, nextRank.required - user.businessVolume).toLocaleString()}
-                </p>
+                <Wallet className="h-8 w-8 text-blue-600" />
               </div>
-            )}
+            </div>
+            <div className="p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-purple-700">Purchased Amount</p>
+                  <p className="text-2xl font-bold text-purple-800">₹{user.purchasedAmount.toLocaleString()}</p>
+                </div>
+                <Gift className="h-8 w-8 text-purple-600" />
+              </div>
+            </div>
+            <div className="p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg border border-orange-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-orange-700">Referral Bonus</p>
+                  <p className="text-2xl font-bold text-orange-800">₹{user.referralBonus.toLocaleString()}</p>
+                </div>
+                <TrendingUp className="h-8 w-8 text-orange-600" />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Team & Business */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card className="bg-white shadow-sm border border-gray-200">
+          <CardHeader>
+            <CardTitle className="flex items-center text-gray-900">
+              <Users className="mr-2 h-5 w-5 text-blue-600" />
+              Team Overview
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-gray-600">Total Team</span>
+                <span className="font-bold text-gray-900">{user.totalTeam}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-gray-600">Direct Team</span>
+                <span className="font-bold text-gray-900">{user.directTeam}</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-gray-600">Business Volume</span>
+                <span className="font-bold text-gray-900">{user.businessVolume.toLocaleString()} BV</span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-green-50 rounded-lg border border-green-200">
+                <span className="text-green-700">Generated BV to Referrer</span>
+                <span className="font-bold text-green-800">+{generatedBV} BV</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-white shadow-sm border border-gray-200">
+          <CardHeader>
+            <CardTitle className="flex items-center text-gray-900">
+              <Award className="mr-2 h-5 w-5 text-indigo-600" />
+              Rank & Referral
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-gray-600">Current Rank</span>
+                <Badge className="bg-indigo-100 text-indigo-800 border-indigo-200">{user.rank}</Badge>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-gray-600">Referral Code</span>
+                <span className="font-bold text-gray-900">{user.referralCode}</span>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm text-gray-600">Referral Links</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" size="sm" className="text-xs">
+                    Left Link
+                  </Button>
+                  <Button variant="outline" size="sm" className="text-xs">
+                    Right Link
+                  </Button>
+                </div>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">
+                <span className="text-gray-600">Salary Level</span>
+                <span className="font-bold text-gray-900">Level 3</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Quick Actions */}
+      <Card className="bg-white shadow-sm border border-gray-200">
+        <CardHeader>
+          <CardTitle className="text-gray-900">Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Button className="h-16 bg-green-600 hover:bg-green-700 text-white">
+              <div className="text-center">
+                <Wallet className="h-6 w-6 mx-auto mb-1" />
+                <span className="text-sm">Deposit</span>
+              </div>
+            </Button>
+            <Button className="h-16 bg-red-600 hover:bg-red-700 text-white">
+              <div className="text-center">
+                <TrendingUp className="h-6 w-6 mx-auto mb-1" />
+                <span className="text-sm">Withdraw</span>
+              </div>
+            </Button>
+            <Button className="h-16 bg-blue-600 hover:bg-blue-700 text-white">
+              <div className="text-center">
+                <Users className="h-6 w-6 mx-auto mb-1" />
+                <span className="text-sm">Invite</span>
+              </div>
+            </Button>
+            <Button className="h-16 bg-purple-600 hover:bg-purple-700 text-white">
+              <div className="text-center">
+                <Gift className="h-6 w-6 mx-auto mb-1" />
+                <span className="text-sm">Shop</span>
+              </div>
+            </Button>
           </div>
         </CardContent>
       </Card>

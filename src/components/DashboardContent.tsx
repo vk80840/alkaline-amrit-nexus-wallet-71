@@ -3,7 +3,7 @@ import { User } from '../types/user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
+import { Input } from '@/components/ui/input';
 import { 
   User as UserIcon, 
   Mail, 
@@ -16,8 +16,10 @@ import {
   Gift,
   CheckCircle,
   Clock,
-  XCircle
+  XCircle,
+  Copy
 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
 
 interface DashboardContentProps {
   user: User;
@@ -37,6 +39,17 @@ const DashboardContent = ({ user }: DashboardContentProps) => {
   };
 
   const generatedBV = 1250; // Generated BV to referrer
+
+  const leftLink = `https://yourcompany.com/register?ref=${user.referralCode}&side=left`;
+  const rightLink = `https://yourcompany.com/register?ref=${user.referralCode}&side=right`;
+
+  const copyToClipboard = (text: string, side: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Link Copied",
+      description: `${side} referral link copied to clipboard`,
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -204,15 +217,45 @@ const DashboardContent = ({ user }: DashboardContentProps) => {
                 <span className="text-gray-600">Referral Code</span>
                 <span className="font-bold text-gray-900">{user.referralCode}</span>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <p className="text-sm text-gray-600">Referral Links</p>
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" size="sm" className="text-xs">
-                    Left Link
-                  </Button>
-                  <Button variant="outline" size="sm" className="text-xs">
-                    Right Link
-                  </Button>
+                
+                {/* Left Link */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-500">Left Side Link</label>
+                  <div className="flex space-x-2">
+                    <Input 
+                      value={leftLink} 
+                      readOnly 
+                      className="text-xs"
+                    />
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => copyToClipboard(leftLink, 'Left')}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Right Link */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-gray-500">Right Side Link</label>
+                  <div className="flex space-x-2">
+                    <Input 
+                      value={rightLink} 
+                      readOnly 
+                      className="text-xs"
+                    />
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      onClick={() => copyToClipboard(rightLink, 'Right')}
+                    >
+                      <Copy className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
               </div>
               <div className="flex justify-between items-center p-3 bg-gray-50 rounded-lg">

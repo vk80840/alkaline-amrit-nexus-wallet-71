@@ -1,4 +1,3 @@
-
 import { User } from '../types/user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -16,7 +15,7 @@ const BusinessVolumeTab = ({ user }: BusinessVolumeTabProps) => {
     expiredBV: 15000,
     leftTeam: 62000,
     rightTeam: 58000,
-    monthlyProgress: 75,
+    monthlyBV: 7500, // BV earned this month
   };
 
   // Mock BV breakdown data
@@ -143,17 +142,14 @@ const BusinessVolumeTab = ({ user }: BusinessVolumeTabProps) => {
             <TrendingUp className="mr-2 h-5 w-5 text-blue-600" />
             Monthly Progress
           </CardTitle>
-          <CardDescription>Your BV accumulation progress this month</CardDescription>
+          <CardDescription>Your BV accumulation this month</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Progress: {bvData.monthlyProgress}%</span>
-              <span className="text-gray-600">
-                {Math.floor(10000 * (bvData.monthlyProgress / 100)).toLocaleString()} BV earned this month
-              </span>
+          <div className="text-center">
+            <div className="text-3xl font-bold text-blue-600 mb-2">
+              {bvData.monthlyBV.toLocaleString()} BV
             </div>
-            <Progress value={bvData.monthlyProgress} className="h-3" />
+            <p className="text-gray-600">Earned this month</p>
           </div>
         </CardContent>
       </Card>

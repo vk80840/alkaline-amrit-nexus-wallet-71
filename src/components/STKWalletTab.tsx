@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { TrendingUp, ArrowUp, ArrowDown, Star } from 'lucide-react';
+import { TrendingUp, ArrowUp, ArrowDown, Star, Lock, Calendar } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface STKWalletTabProps {
@@ -31,7 +31,7 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
     if (user.mainBalance >= totalCost) {
       toast({
         title: "STK Purchase Successful",
-        description: `Purchased ${buyAmount} STK for ₹${totalCost.toLocaleString()}`,
+        description: `Purchased ${buyAmount} STK for ₹${totalCost.toLocaleString()} (Locked for 15 months)`,
       });
       setBuyAmount('');
     } else {
@@ -61,7 +61,7 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
     }
   };
 
-  // Mock STK transaction history
+  // Mock STK transaction history with lock dates
   const stkTransactions = [
     {
       id: '1',
@@ -69,9 +69,10 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
       amount: 100,
       price: 25.00,
       total: 2500,
-      status: 'available',
+      status: 'locked',
       source: 'Purchase',
       date: '2024-01-22',
+      lockUntil: '2025-04-22',
     },
     {
       id: '2',
@@ -82,6 +83,7 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
       status: 'locked',
       source: 'First Purchase Bonus',
       date: '2024-01-20',
+      lockUntil: '2025-04-20',
     },
     {
       id: '3',
@@ -91,7 +93,8 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
       total: 620,
       status: 'available',
       source: 'Level 1 Referral',
-      date: '2024-01-18',
+      date: '2023-01-18',
+      lockUntil: '2024-04-18',
     },
   ];
 
@@ -114,7 +117,7 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
       case 'available':
         return 'bg-green-100 text-green-800';
       case 'locked':
-        return 'bg-yellow-100 text-yellow-800';
+        return 'bg-red-100 text-red-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -122,6 +125,25 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
 
   return (
     <div className="space-y-6">
+      {/* STK Lock Policy Notice */}
+      <Card className="bg-yellow-50 border-yellow-200">
+        <CardHeader>
+          <CardTitle className="flex items-center text-yellow-800">
+            <Lock className="mr-2 h-5 w-5" />
+            STK Lock Policy (15-Month Lock Period)
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="text-sm text-yellow-700 space-y-2">
+            <li>• ALL STK from ANY source is automatically locked for 15 months</li>
+            <li>• This includes STK purchased with main balance, rewards, referrals, bonuses, and any other source</li>
+            <li>• Locked STK cannot be sold, transferred, or traded during the lock period</li>
+            <li>• Locked STK will automatically become available after exactly 15 months from the date received</li>
+            <li>• Lock period ensures long-term commitment and ecosystem stability</li>
+          </ul>
+        </CardContent>
+      </Card>
+
       {/* STK Overview */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-lg border-white/30">
@@ -132,9 +154,9 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-lg border-white/30">
+        <Card className="bg-gradient-to-br from-red-500/20 to-orange-500/20 backdrop-blur-lg border-white/30">
           <CardContent className="p-4 text-center">
-            <Star className="mx-auto h-8 w-8 text-orange-500 mb-2" />
+            <Lock className="mx-auto h-8 w-8 text-red-500 mb-2" />
             <p className="text-sm text-gray-600">Locked STK</p>
             <p className="text-xl font-bold">{stkData.lockedSTK.toLocaleString()}</p>
           </CardContent>
@@ -165,12 +187,19 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
               <ArrowDown className="mr-2 h-5 w-5" />
               Buy STK
             </CardTitle>
-            <CardDescription>Purchase STK using your main balance</CardDescription>
+            <CardDescription>Purchase STK using your main balance (15-month lock applies)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="p-3 bg-green-50 rounded-lg">
               <p className="text-sm text-green-700">
                 Available Balance: ₹{user.mainBalance.toLocaleString()}
+              </p>
+            </div>
+
+            <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+              <p className="text-xs text-yellow-700 flex items-center">
+                <Lock className="h-3 w-3 mr-1" />
+                STK will be locked for 15 months from purchase date
               </p>
             </div>
 
@@ -196,7 +225,7 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
               className="w-full bg-gradient-to-r from-green-500 to-green-600"
               disabled={!buyAmount || Number(buyAmount) * stkData.currentPrice > user.mainBalance}
             >
-              Buy STK
+              Buy STK (15-Month Lock)
             </Button>
           </CardContent>
         </Card>
@@ -207,7 +236,7 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
               <ArrowUp className="mr-2 h-5 w-5" />
               Sell STK
             </CardTitle>
-            <CardDescription>Sell your available STK for main balance</CardDescription>
+            <CardDescription>Sell your available (unlocked) STK for main balance</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="p-3 bg-red-50 rounded-lg">
@@ -249,7 +278,7 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
       <Card className="bg-white/60 backdrop-blur-lg border-white/30 shadow-xl">
         <CardHeader>
           <CardTitle>STK Transaction History</CardTitle>
-          <CardDescription>Your STK trading and reward history</CardDescription>
+          <CardDescription>Your STK trading and reward history with lock status</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -266,6 +295,12 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
                     </p>
                     <p className="text-sm text-gray-600">{transaction.source}</p>
                     <p className="text-xs text-gray-500">{transaction.date}</p>
+                    {transaction.status === 'locked' && (
+                      <p className="text-xs text-red-600 flex items-center">
+                        <Calendar className="h-3 w-3 mr-1" />
+                        Unlocks: {transaction.lockUntil}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">
@@ -276,7 +311,14 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
                     @ ₹{transaction.price} = ₹{transaction.total.toLocaleString()}
                   </p>
                   <Badge className={`mt-1 ${getStatusColor(transaction.status)}`}>
-                    {transaction.status}
+                    {transaction.status === 'locked' ? (
+                      <span className="flex items-center">
+                        <Lock className="h-3 w-3 mr-1" />
+                        Locked
+                      </span>
+                    ) : (
+                      'Available'
+                    )}
                   </Badge>
                 </div>
               </div>

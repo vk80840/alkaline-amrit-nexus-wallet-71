@@ -1,76 +1,55 @@
 
+import { useState, useEffect } from 'react';
 import { User } from '../types/user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Bell, AlertTriangle, Info, Package, FileText } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import { Announcement } from '../types/user';
 
 interface AnnouncementsTabProps {
   user: User;
 }
 
 const AnnouncementsTab = ({ user }: AnnouncementsTabProps) => {
-  // Mock announcements data
-  const announcements = [
-    {
-      id: '1',
-      title: 'New Product Launch: Advanced Water Filter',
-      description: 'We are excited to announce the launch of our new Advanced Alkaline Water Filter System. This state-of-the-art filtration technology provides the purest alkaline water with enhanced mineral content.',
-      tag: 'product',
-      priority: 'high',
-      by: 'Admin Team',
-      createdDate: '2024-01-23',
-      isRead: false,
-    },
-    {
-      id: '2',
-      title: 'Updated KYC Verification Process',
-      description: 'To comply with new regulations, we have updated our KYC verification process. All users are required to submit additional documentation for identity verification.',
-      tag: 'policies',
-      priority: 'medium',
-      by: 'Compliance Team',
-      createdDate: '2024-01-22',
-      isRead: true,
-    },
-    {
-      id: '3',
-      title: 'Scheduled Maintenance - January 25th',
-      description: 'Our platform will undergo scheduled maintenance on January 25th from 2:00 AM to 6:00 AM IST. During this time, some services may be temporarily unavailable.',
-      tag: 'maintenance',
-      priority: 'medium',
-      by: 'Technical Team',
-      createdDate: '2024-01-21',
-      isRead: false,
-    },
-    {
-      id: '4',
-      title: 'Enhanced Referral Bonus Program',
-      description: 'We have enhanced our referral bonus structure! Starting February 1st, enjoy increased commission rates and additional level bonuses.',
-      tag: 'policies',
-      priority: 'high',
-      by: 'Management',
-      createdDate: '2024-01-20',
-      isRead: true,
-    },
-    {
-      id: '5',
-      title: 'Winter Sale - Up to 30% Off',
-      description: 'Take advantage of our winter sale with discounts up to 30% on all alkaline water products. Limited time offer valid until January 31st.',
-      tag: 'product',
-      priority: 'low',
-      by: 'Sales Team',
-      createdDate: '2024-01-18',
-      isRead: true,
-    },
-  ];
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchAnnouncements();
+  }, []);
+
+  const fetchAnnouncements = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('announcements')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setAnnouncements(data || []);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch announcements",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getTagIcon = (tag: string) => {
     switch (tag) {
       case 'product':
         return <Package className="h-4 w-4" />;
-      case 'policies':
+      case 'promotion':
         return <FileText className="h-4 w-4" />;
-      case 'maintenance':
+      case 'welcome':
         return <AlertTriangle className="h-4 w-4" />;
       default:
         return <Info className="h-4 w-4" />;
@@ -81,32 +60,30 @@ const AnnouncementsTab = ({ user }: AnnouncementsTabProps) => {
     switch (tag) {
       case 'product':
         return 'bg-blue-100 text-blue-800';
-      case 'policies':
+      case 'promotion':
         return 'bg-purple-100 text-purple-800';
-      case 'maintenance':
+      case 'welcome':
         return 'bg-orange-100 text-orange-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-800';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'low':
-        return 'bg-green-100 text-green-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
-    }
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   };
 
-  const stats = {
-    total: announcements.length,
-    unread: announcements.filter(a => !a.isRead).length,
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -116,15 +93,15 @@ const AnnouncementsTab = ({ user }: AnnouncementsTabProps) => {
           <CardContent className="p-4 text-center">
             <Bell className="mx-auto h-8 w-8 text-blue-500 mb-2" />
             <p className="text-sm text-gray-600">Total Announcements</p>
-            <p className="text-2xl font-bold">{stats.total}</p>
+            <p className="text-2xl font-bold">{announcements.length}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-gradient-to-br from-orange-500/20 to-red-500/20 backdrop-blur-lg border-white/30">
           <CardContent className="p-4 text-center">
             <AlertTriangle className="mx-auto h-8 w-8 text-orange-500 mb-2" />
-            <p className="text-sm text-gray-600">Unread</p>
-            <p className="text-2xl font-bold">{stats.unread}</p>
+            <p className="text-sm text-gray-600">Active</p>
+            <p className="text-2xl font-bold">{announcements.filter(a => a.is_active).length}</p>
           </CardContent>
         </Card>
       </div>
@@ -141,62 +118,55 @@ const AnnouncementsTab = ({ user }: AnnouncementsTabProps) => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {announcements.map((announcement) => (
-              <div 
-                key={announcement.id}
-                className={`p-4 rounded-lg border transition-all hover:shadow-md ${
-                  announcement.isRead 
-                    ? 'bg-white/30 border-gray-200' 
-                    : 'bg-blue-50/50 border-blue-200 ring-1 ring-blue-200'
-                }`}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-start space-x-3">
-                    {!announcement.isRead && (
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
-                    )}
-                    <div className="flex-1">
-                      <h3 className={`font-semibold ${!announcement.isRead ? 'text-blue-900' : 'text-gray-900'}`}>
-                        {announcement.title}
-                      </h3>
-                      <div className="flex items-center space-x-2 mt-1">
-                        <Badge className={getTagColor(announcement.tag)}>
-                          <div className="flex items-center space-x-1">
-                            {getTagIcon(announcement.tag)}
-                            <span className="capitalize">{announcement.tag}</span>
-                          </div>
-                        </Badge>
-                        <Badge className={getPriorityColor(announcement.priority)}>
-                          {announcement.priority} priority
-                        </Badge>
+          {announcements.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              No announcements available at the moment.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {announcements.map((announcement) => (
+                <div 
+                  key={announcement.id}
+                  className="p-4 rounded-lg border bg-white/30 border-gray-200 transition-all hover:shadow-md"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start space-x-3">
+                      <div className="flex-1">
+                        <h3 className="font-semibold text-gray-900">
+                          {announcement.title}
+                        </h3>
+                        <div className="flex items-center space-x-2 mt-1">
+                          <Badge className={getTagColor(announcement.type)}>
+                            <div className="flex items-center space-x-1">
+                              {getTagIcon(announcement.type)}
+                              <span className="capitalize">{announcement.type}</span>
+                            </div>
+                          </Badge>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  {!announcement.isRead && (
-                    <Button variant="outline" size="sm">
-                      Mark as Read
-                    </Button>
-                  )}
+                  
+                  <p className="text-gray-700 mb-3 leading-relaxed">
+                    {announcement.content}
+                  </p>
+                  
+                  <div className="flex justify-between items-center text-xs text-gray-500">
+                    <span>By: Admin</span>
+                    <span>{formatDate(announcement.created_at)}</span>
+                  </div>
                 </div>
-                
-                <p className="text-gray-700 mb-3 leading-relaxed">
-                  {announcement.description}
-                </p>
-                
-                <div className="flex justify-between items-center text-xs text-gray-500">
-                  <span>By: {announcement.by}</span>
-                  <span>{announcement.createdDate}</span>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
-          <div className="mt-6 text-center">
-            <Button variant="outline">
-              Load More Announcements
-            </Button>
-          </div>
+          {announcements.length > 0 && (
+            <div className="mt-6 text-center">
+              <Button variant="outline" onClick={fetchAnnouncements}>
+                Refresh Announcements
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

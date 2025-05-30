@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { User } from '../types/user';
+import { useAuth } from '@/hooks/useAuth';
 import Sidebar from './Sidebar';
 import Header from './Header';
 import DashboardContent from './DashboardContent';
@@ -24,10 +25,19 @@ interface DashboardProps {
   onLogout: () => void;
 }
 
-const Dashboard = ({ user, onLogout }: DashboardProps) => {
+const Dashboard = ({ user }: DashboardProps) => {
+  const { signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const isMobile = useIsMobile();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   const renderActiveTab = () => {
     switch (activeTab) {
@@ -71,7 +81,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
         setActiveTab={setActiveTab}
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
-        onLogout={onLogout}
+        onLogout={handleLogout}
       />
 
       {/* Main Content */}
@@ -81,7 +91,7 @@ const Dashboard = ({ user, onLogout }: DashboardProps) => {
         <Header 
           user={user}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-          onLogout={onLogout}
+          onLogout={handleLogout}
           setActiveTab={setActiveTab}
         />
         

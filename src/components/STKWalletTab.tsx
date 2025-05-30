@@ -8,6 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { TrendingUp, ArrowUp, ArrowDown, Star, Lock, Calendar, Shield, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Candlestick } from 'recharts';
 
 interface STKWalletTabProps {
   user: User;
@@ -16,12 +18,81 @@ interface STKWalletTabProps {
 const STKWalletTab = ({ user }: STKWalletTabProps) => {
   const [buyAmount, setBuyAmount] = useState('');
   const [sellAmount, setSellAmount] = useState('');
+  const [selectedTimeframe, setSelectedTimeframe] = useState('1D');
   
   const stkData = {
     availableSTK: user.stkBalance,
     lockedSTK: 500,
     currentPrice: 25.50,
     availableValue: user.stkBalance * 25.50,
+  };
+
+  // Mock candlestick data for different timeframes
+  const chartData = {
+    '1D': [
+      { time: '09:00', open: 25.20, high: 25.60, low: 25.10, close: 25.50 },
+      { time: '10:00', open: 25.50, high: 25.80, low: 25.40, close: 25.75 },
+      { time: '11:00', open: 25.75, high: 25.90, low: 25.65, close: 25.80 },
+      { time: '12:00', open: 25.80, high: 25.95, low: 25.70, close: 25.85 },
+      { time: '13:00', open: 25.85, high: 26.00, low: 25.75, close: 25.90 },
+      { time: '14:00', open: 25.90, high: 26.20, low: 25.85, close: 26.10 },
+      { time: '15:00', open: 26.10, high: 26.30, low: 26.00, close: 26.25 },
+    ],
+    '1W': [
+      { time: 'Mon', open: 24.50, high: 25.20, low: 24.30, close: 25.00 },
+      { time: 'Tue', open: 25.00, high: 25.60, low: 24.90, close: 25.40 },
+      { time: 'Wed', open: 25.40, high: 25.80, low: 25.20, close: 25.70 },
+      { time: 'Thu', open: 25.70, high: 26.00, low: 25.50, close: 25.90 },
+      { time: 'Fri', open: 25.90, high: 26.30, low: 25.80, close: 26.25 },
+    ],
+    '1M': [
+      { time: 'Week 1', open: 23.50, high: 24.20, low: 23.20, close: 24.00 },
+      { time: 'Week 2', open: 24.00, high: 24.80, low: 23.80, close: 24.60 },
+      { time: 'Week 3', open: 24.60, high: 25.40, low: 24.40, close: 25.20 },
+      { time: 'Week 4', open: 25.20, high: 26.30, low: 25.00, close: 26.25 },
+    ],
+    '3M': [
+      { time: 'Jan', open: 20.50, high: 22.20, low: 20.20, close: 22.00 },
+      { time: 'Feb', open: 22.00, high: 23.80, low: 21.80, close: 23.60 },
+      { time: 'Mar', open: 23.60, high: 25.40, low: 23.40, close: 25.20 },
+      { time: 'Apr', open: 25.20, high: 26.30, low: 25.00, close: 26.25 },
+    ],
+  };
+
+  const timeframes = ['1D', '1W', '1M', '3M'];
+
+  const CustomCandlestick = (props: any) => {
+    const { payload, x, y, width, height } = props;
+    if (!payload) return null;
+
+    const { open, close, high, low } = payload;
+    const isUp = close > open;
+    const color = isUp ? '#10b981' : '#ef4444';
+    
+    const bodyHeight = Math.abs(close - open) * height / (payload.high - payload.low);
+    const bodyY = y + (Math.max(high - Math.max(open, close), 0) * height / (high - low));
+    
+    return (
+      <g>
+        {/* Wick */}
+        <line
+          x1={x + width / 2}
+          y1={y}
+          x2={x + width / 2}
+          y2={y + height}
+          stroke={color}
+          strokeWidth={1}
+        />
+        {/* Body */}
+        <rect
+          x={x + width * 0.25}
+          y={bodyY}
+          width={width * 0.5}
+          height={bodyHeight}
+          fill={color}
+        />
+      </g>
+    );
   };
 
   const handleBuySTK = () => {
@@ -137,15 +208,15 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
             <div className="flex items-start space-x-3">
               <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
               <div>
-                <h4 className="font-semibold text-amber-800 mb-2">Universal Lock Mechanism</h4>
+                <h4 className="font-semibold text-amber-800 mb-2">15-Month Lock Period</h4>
                 <ul className="text-sm text-amber-700 space-y-2">
                   <li className="flex items-start">
                     <span className="font-medium mr-2">•</span>
-                    <span><strong>ALL STK from ANY source</strong> is automatically locked for exactly 15 months</span>
+                    <span><strong>ALL STK from ANY source</strong> is automatically locked for 15 months</span>
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium mr-2">•</span>
-                    <span>Includes: purchased STK, rewards, referral bonuses, level bonuses, and any other source</span>
+                    <span>This includes STK purchased with main balance, rewards, referrals, bonuses, and any other source</span>
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium mr-2">•</span>
@@ -153,11 +224,11 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium mr-2">•</span>
-                    <span>STK automatically becomes available after exactly 15 months from date received</span>
+                    <span>Locked STK will automatically become available after exactly 15 months from the date received</span>
                   </li>
                   <li className="flex items-start">
                     <span className="font-medium mr-2">•</span>
-                    <span>This policy ensures long-term commitment and ecosystem stability</span>
+                    <span>Lock period ensures long-term commitment and ecosystem stability</span>
                   </li>
                 </ul>
               </div>
@@ -166,48 +237,114 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
         </CardContent>
       </Card>
 
-      {/* STK Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-500 text-white shadow-xl">
-          <CardContent className="p-6 text-center">
-            <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
-              <Star className="h-8 w-8" />
+      {/* STK Overview - Compact 2x2 Grid */}
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-500 text-white shadow-lg">
+          <CardContent className="p-4 text-center">
+            <div className="bg-white/20 rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-2">
+              <Star className="h-5 w-5" />
             </div>
-            <p className="text-yellow-100 text-sm font-medium">Available STK</p>
-            <p className="text-2xl font-bold">{stkData.availableSTK.toLocaleString()}</p>
+            <p className="text-yellow-100 text-xs font-medium">Available STK</p>
+            <p className="text-lg font-bold">{stkData.availableSTK.toLocaleString()}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white shadow-xl">
-          <CardContent className="p-6 text-center">
-            <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
-              <Lock className="h-8 w-8" />
+        <Card className="bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white shadow-lg">
+          <CardContent className="p-4 text-center">
+            <div className="bg-white/20 rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-2">
+              <Lock className="h-5 w-5" />
             </div>
-            <p className="text-red-100 text-sm font-medium">Locked STK</p>
-            <p className="text-2xl font-bold">{stkData.lockedSTK.toLocaleString()}</p>
+            <p className="text-red-100 text-xs font-medium">Locked STK</p>
+            <p className="text-lg font-bold">{stkData.lockedSTK.toLocaleString()}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white shadow-xl">
-          <CardContent className="p-6 text-center">
-            <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
-              <TrendingUp className="h-8 w-8" />
+        <Card className="bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white shadow-lg">
+          <CardContent className="p-4 text-center">
+            <div className="bg-white/20 rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-2">
+              <TrendingUp className="h-5 w-5" />
             </div>
-            <p className="text-green-100 text-sm font-medium">Current Price</p>
-            <p className="text-2xl font-bold">₹{stkData.currentPrice}</p>
+            <p className="text-green-100 text-xs font-medium">Current Price</p>
+            <p className="text-lg font-bold">₹{stkData.currentPrice}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 text-white shadow-xl">
-          <CardContent className="p-6 text-center">
-            <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
-              <TrendingUp className="h-8 w-8" />
+        <Card className="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 text-white shadow-lg">
+          <CardContent className="p-4 text-center">
+            <div className="bg-white/20 rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-2">
+              <TrendingUp className="h-5 w-5" />
             </div>
-            <p className="text-blue-100 text-sm font-medium">Available Value</p>
-            <p className="text-2xl font-bold">₹{stkData.availableValue.toLocaleString()}</p>
+            <p className="text-blue-100 text-xs font-medium">Available Value</p>
+            <p className="text-lg font-bold">₹{stkData.availableValue.toLocaleString()}</p>
           </CardContent>
         </Card>
       </div>
+
+      {/* STK Price Chart */}
+      <Card className="shadow-xl">
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle className="text-xl">STK Price Chart</CardTitle>
+              <CardDescription>Live market data with candlestick view</CardDescription>
+            </div>
+            <div className="flex gap-2">
+              {timeframes.map((timeframe) => (
+                <Button
+                  key={timeframe}
+                  variant={selectedTimeframe === timeframe ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setSelectedTimeframe(timeframe)}
+                  className="text-xs"
+                >
+                  {timeframe}
+                </Button>
+              ))}
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="h-80 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={chartData[selectedTimeframe as keyof typeof chartData]}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="time" 
+                  stroke="#6b7280"
+                  fontSize={12}
+                />
+                <YAxis 
+                  domain={['dataMin - 0.1', 'dataMax + 0.1']}
+                  stroke="#6b7280"
+                  fontSize={12}
+                />
+                <ChartTooltip 
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0]?.payload;
+                      return (
+                        <div className="bg-white p-3 border rounded-lg shadow-lg">
+                          <p className="font-semibold">{label}</p>
+                          <div className="space-y-1 text-sm">
+                            <p>Open: <span className="font-medium">₹{data.open}</span></p>
+                            <p>High: <span className="font-medium text-green-600">₹{data.high}</span></p>
+                            <p>Low: <span className="font-medium text-red-600">₹{data.low}</span></p>
+                            <p>Close: <span className="font-medium">₹{data.close}</span></p>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                {chartData[selectedTimeframe as keyof typeof chartData].map((entry, index) => (
+                  <CustomCandlestick key={index} {...entry} />
+                ))}
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Buy/Sell Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

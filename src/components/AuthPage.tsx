@@ -7,7 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { toast } from '@/hooks/use-toast';
+import { ArrowLeft, Check } from 'lucide-react';
 
 interface AuthPageProps {
   onLogin: (user: User) => void;
@@ -16,6 +19,17 @@ interface AuthPageProps {
 const AuthPage = ({ onLogin }: AuthPageProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const [sponsorName, setSponsorName] = useState('');
+  const [referralCode, setReferralCode] = useState('');
+  const [selectedSide, setSelectedSide] = useState('');
+  
+  // Forgot password states
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
+  const [forgotPasswordStep, setForgotPasswordStep] = useState(1);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [associatedUserId, setAssociatedUserId] = useState('');
+  const [otp, setOtp] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -89,6 +103,7 @@ const AuthPage = ({ onLogin }: AuthPageProps) => {
   };
 
   const verifyReferralCode = (code: string) => {
+    setReferralCode(code);
     if (code) {
       // Simulate API call to verify referral code
       setTimeout(() => {
@@ -100,19 +115,88 @@ const AuthPage = ({ onLogin }: AuthPageProps) => {
       }, 500);
     } else {
       setSponsorName('');
+      setSelectedSide('');
     }
   };
 
+  const handleForgotPasswordEmailSubmit = () => {
+    if (forgotEmail) {
+      // Simulate finding associated user ID
+      setAssociatedUserId('AU00001');
+      setForgotPasswordStep(2);
+      toast({
+        title: "User found",
+        description: "Associated User ID displayed below",
+      });
+    }
+  };
+
+  const handleSendOTP = () => {
+    setForgotPasswordStep(3);
+    toast({
+      title: "OTP Sent",
+      description: "Please check your email for the verification code",
+    });
+  };
+
+  const handleOTPVerification = () => {
+    if (otp.length === 6) {
+      setForgotPasswordStep(4);
+      toast({
+        title: "OTP Verified",
+        description: "Please set your new password",
+      });
+    }
+  };
+
+  const handlePasswordChange = () => {
+    if (newPassword === confirmPassword && newPassword.length >= 6) {
+      setForgotPasswordStep(5);
+      toast({
+        title: "Password Changed Successfully",
+        description: "You can now login with your new password",
+      });
+      // Reset after 3 seconds
+      setTimeout(() => {
+        setForgotPasswordOpen(false);
+        setForgotPasswordStep(1);
+        setForgotEmail('');
+        setAssociatedUserId('');
+        setOtp('');
+        setNewPassword('');
+        setConfirmPassword('');
+      }, 3000);
+    } else {
+      toast({
+        title: "Password Error",
+        description: "Passwords don't match or are too short",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const resetForgotPassword = () => {
+    setForgotPasswordStep(1);
+    setForgotEmail('');
+    setAssociatedUserId('');
+    setOtp('');
+    setNewPassword('');
+    setConfirmPassword('');
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      <div 
-        className="absolute inset-0 opacity-20"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-        }}
-      ></div>
+    <div 
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url("https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2071&q=80")`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
+      <div className="absolute inset-0 bg-black/50"></div>
       
-      <Card className="w-full max-w-md backdrop-blur-lg bg-white/10 border-white/20 shadow-2xl">
+      <Card className="w-full max-w-md backdrop-blur-lg bg-white/10 border-white/20 shadow-2xl relative z-10">
         <CardHeader className="text-center space-y-2">
           <div className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
             <span className="text-white font-bold text-2xl">AA</span>
@@ -163,6 +247,150 @@ const AuthPage = ({ onLogin }: AuthPageProps) => {
                 >
                   {isLoading ? 'Signing in...' : 'Sign In'}
                 </Button>
+                
+                <Dialog open={forgotPasswordOpen} onOpenChange={setForgotPasswordOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="link" className="w-full text-white/80 hover:text-white">
+                      Forgot Password?
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center">
+                        {forgotPasswordStep > 1 && forgotPasswordStep < 5 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={resetForgotPassword}
+                            className="mr-2"
+                          >
+                            <ArrowLeft className="h-4 w-4" />
+                          </Button>
+                        )}
+                        Reset Password
+                      </DialogTitle>
+                      <DialogDescription>
+                        {forgotPasswordStep === 1 && "Enter your email to find your user ID"}
+                        {forgotPasswordStep === 2 && "Your associated user ID"}
+                        {forgotPasswordStep === 3 && "Enter the OTP sent to your email"}
+                        {forgotPasswordStep === 4 && "Set your new password"}
+                        {forgotPasswordStep === 5 && "Password changed successfully!"}
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                      {forgotPasswordStep === 1 && (
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="forgot-email">Email Address</Label>
+                            <Input
+                              id="forgot-email"
+                              type="email"
+                              placeholder="Enter your email"
+                              value={forgotEmail}
+                              onChange={(e) => setForgotEmail(e.target.value)}
+                            />
+                          </div>
+                          <Button 
+                            onClick={handleForgotPasswordEmailSubmit}
+                            className="w-full"
+                            disabled={!forgotEmail}
+                          >
+                            Find User ID
+                          </Button>
+                        </>
+                      )}
+
+                      {forgotPasswordStep === 2 && (
+                        <>
+                          <div className="p-4 bg-green-50 rounded-lg border border-green-200">
+                            <p className="text-sm text-green-800">
+                              Associated User ID: <span className="font-bold">{associatedUserId}</span>
+                            </p>
+                          </div>
+                          <Button onClick={handleSendOTP} className="w-full">
+                            Send OTP
+                          </Button>
+                        </>
+                      )}
+
+                      {forgotPasswordStep === 3 && (
+                        <>
+                          <div className="space-y-2">
+                            <Label>Enter 6-digit OTP</Label>
+                            <InputOTP
+                              maxLength={6}
+                              value={otp}
+                              onChange={(value) => setOtp(value)}
+                            >
+                              <InputOTPGroup>
+                                <InputOTPSlot index={0} />
+                                <InputOTPSlot index={1} />
+                                <InputOTPSlot index={2} />
+                                <InputOTPSlot index={3} />
+                                <InputOTPSlot index={4} />
+                                <InputOTPSlot index={5} />
+                              </InputOTPGroup>
+                            </InputOTP>
+                          </div>
+                          <Button 
+                            onClick={handleOTPVerification}
+                            className="w-full"
+                            disabled={otp.length !== 6}
+                          >
+                            Verify OTP
+                          </Button>
+                        </>
+                      )}
+
+                      {forgotPasswordStep === 4 && (
+                        <>
+                          <div className="space-y-2">
+                            <Label htmlFor="new-password">New Password</Label>
+                            <Input
+                              id="new-password"
+                              type="password"
+                              placeholder="Enter new password"
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+                            <Input
+                              id="confirm-new-password"
+                              type="password"
+                              placeholder="Confirm new password"
+                              value={confirmPassword}
+                              onChange={(e) => setConfirmPassword(e.target.value)}
+                            />
+                          </div>
+                          <Button 
+                            onClick={handlePasswordChange}
+                            className="w-full"
+                            disabled={!newPassword || !confirmPassword}
+                          >
+                            Change Password
+                          </Button>
+                        </>
+                      )}
+
+                      {forgotPasswordStep === 5 && (
+                        <div className="text-center py-6">
+                          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Check className="h-8 w-8 text-green-600" />
+                          </div>
+                          <h3 className="text-lg font-semibold text-green-800 mb-2">
+                            Password Changed Successfully!
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            You can now login with your new password
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </form>
             </TabsContent>
 
@@ -199,30 +427,33 @@ const AuthPage = ({ onLogin }: AuthPageProps) => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="side" className="text-white">Preferred Side</Label>
-                  <Select>
-                    <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                      <SelectValue placeholder="Select side" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="left">Left</SelectItem>
-                      <SelectItem value="right">Right</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
                   <Label htmlFor="referral" className="text-white">Referral Code (Optional)</Label>
                   <Input
                     id="referral"
                     type="text"
                     placeholder="Enter referral code"
                     className="bg-white/10 border-white/20 text-white placeholder-gray-400"
+                    value={referralCode}
                     onChange={(e) => verifyReferralCode(e.target.value)}
                   />
                   {sponsorName && (
                     <p className="text-green-400 text-sm">Sponsor: {sponsorName}</p>
                   )}
                 </div>
+                {referralCode && (
+                  <div className="space-y-2">
+                    <Label htmlFor="side" className="text-white">Preferred Side</Label>
+                    <Select value={selectedSide} onValueChange={setSelectedSide}>
+                      <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                        <SelectValue placeholder="Select side" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="left">Left</SelectItem>
+                        <SelectItem value="right">Right</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="signup-password" className="text-white">Password</Label>
                   <Input

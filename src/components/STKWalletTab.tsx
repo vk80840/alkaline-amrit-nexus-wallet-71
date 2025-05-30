@@ -6,16 +6,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, ArrowUp, ArrowDown, Star, Lock, Calendar, Shield, Info } from 'lucide-react';
+import { TrendingUp, ArrowUp, ArrowDown, Star, Lock, Calendar, Shield, Info, Wallet, CreditCard, Users } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Candlestick } from 'recharts';
+import { ComposedChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from 'recharts';
 
 interface STKWalletTabProps {
   user: User;
+  onTabChange?: (tab: string) => void;
 }
 
-const STKWalletTab = ({ user }: STKWalletTabProps) => {
+const STKWalletTab = ({ user, onTabChange }: STKWalletTabProps) => {
   const [buyAmount, setBuyAmount] = useState('');
   const [sellAmount, setSellAmount] = useState('');
   const [selectedTimeframe, setSelectedTimeframe] = useState('1D');
@@ -74,7 +75,6 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
     
     return (
       <g>
-        {/* Wick */}
         <line
           x1={x + width / 2}
           y1={y}
@@ -83,7 +83,6 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
           stroke={color}
           strokeWidth={1}
         />
-        {/* Body */}
         <rect
           x={x + width * 0.25}
           y={bodyY}
@@ -128,6 +127,24 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
         description: "Not enough STK available for sale",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleQuickAction = (action: string) => {
+    if (onTabChange) {
+      switch (action) {
+        case 'wallet':
+          onTabChange('wallet');
+          break;
+        case 'deposit':
+          onTabChange('deposit');
+          break;
+        case 'team':
+          onTabChange('team');
+          break;
+        default:
+          break;
+      }
     }
   };
 
@@ -195,47 +212,33 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
 
   return (
     <div className="space-y-6">
-      {/* STK Lock Policy Notice */}
-      <Card className="border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50 to-yellow-50 shadow-lg">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center text-amber-800">
-            <Shield className="mr-3 h-6 w-6" />
-            STK Lock Policy - 15 Month Security Period
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="bg-white/70 rounded-lg p-4 border border-amber-200">
-            <div className="flex items-start space-x-3">
-              <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <h4 className="font-semibold text-amber-800 mb-2">15-Month Lock Period</h4>
-                <ul className="text-sm text-amber-700 space-y-2">
-                  <li className="flex items-start">
-                    <span className="font-medium mr-2">•</span>
-                    <span><strong>ALL STK from ANY source</strong> is automatically locked for 15 months</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="font-medium mr-2">•</span>
-                    <span>This includes STK purchased with main balance, rewards, referrals, bonuses, and any other source</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="font-medium mr-2">•</span>
-                    <span>Locked STK cannot be sold, transferred, or traded during the lock period</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="font-medium mr-2">•</span>
-                    <span>Locked STK will automatically become available after exactly 15 months from the date received</span>
-                  </li>
-                  <li className="flex items-start">
-                    <span className="font-medium mr-2">•</span>
-                    <span>Lock period ensures long-term commitment and ecosystem stability</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Quick Action Buttons */}
+      <div className="grid grid-cols-3 gap-4">
+        <Button
+          variant="outline"
+          onClick={() => handleQuickAction('wallet')}
+          className="flex items-center justify-center py-6 text-sm font-medium"
+        >
+          <Wallet className="h-5 w-5 mr-2" />
+          Main Wallet
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => handleQuickAction('deposit')}
+          className="flex items-center justify-center py-6 text-sm font-medium"
+        >
+          <CreditCard className="h-5 w-5 mr-2" />
+          Deposit
+        </Button>
+        <Button
+          variant="outline"
+          onClick={() => handleQuickAction('team')}
+          className="flex items-center justify-center py-6 text-sm font-medium"
+        >
+          <Users className="h-5 w-5 mr-2" />
+          Team
+        </Button>
+      </div>
 
       {/* STK Overview - Compact 2x2 Grid */}
       <div className="grid grid-cols-2 gap-4">
@@ -515,6 +518,48 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
                 </div>
               </div>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* STK Lock Policy Notice - Moved to Bottom */}
+      <Card className="border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50 to-yellow-50 shadow-lg">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center text-amber-800">
+            <Shield className="mr-3 h-6 w-6" />
+            STK Lock Policy - 15 Month Security Period
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="bg-white/70 rounded-lg p-4 border border-amber-200">
+            <div className="flex items-start space-x-3">
+              <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h4 className="font-semibold text-amber-800 mb-2">15-Month Lock Period</h4>
+                <ul className="text-sm text-amber-700 space-y-2">
+                  <li className="flex items-start">
+                    <span className="font-medium mr-2">•</span>
+                    <span><strong>ALL STK from ANY source</strong> is automatically locked for 15 months</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium mr-2">•</span>
+                    <span>This includes STK purchased with main balance, rewards, referrals, bonuses, and any other source</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium mr-2">•</span>
+                    <span>Locked STK cannot be sold, transferred, or traded during the lock period</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium mr-2">•</span>
+                    <span>Locked STK will automatically become available after exactly 15 months from the date received</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium mr-2">•</span>
+                    <span>Lock period ensures long-term commitment and ecosystem stability</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>

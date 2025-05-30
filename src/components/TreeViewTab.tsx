@@ -4,8 +4,7 @@ import { User } from '../types/user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, ZoomIn, ZoomOut, User as UserIcon, ChevronDown, ChevronRight, Copy } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Users, ZoomIn, ZoomOut, User as UserIcon, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface TeamMember {
   userId: string;
@@ -64,9 +63,9 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
       profileImage: index % 4 === 0 ? '/placeholder.svg' : undefined,
     };
 
-    // Add children up to level 10, but with decreasing numbers
+    // Add children up to level 10
     if (level < 10) {
-      const childCount = Math.max(1, Math.floor(Math.random() * 3) + 1); // 1-3 children randomly
+      const childCount = level < 3 ? 3 : Math.max(1, Math.floor(Math.random() * 2) + 1);
       member.children = [];
       
       for (let i = 0; i < childCount; i++) {
@@ -85,36 +84,26 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
     side: 'left',
     profileImage: user.profileImage,
     children: [
-      // Generate 5 direct referrals for example
-      ...Array.from({ length: 5 }, (_, i) => 
+      ...Array.from({ length: 10 }, (_, i) => 
         generateMember(1, user.userId, i, i % 2 === 0 ? 'left' : 'right')
       )
     ],
   };
 
-  const TreeNode = ({ member, isRoot = false, isLast = false }: { member: TeamMember; isRoot?: boolean; isLast?: boolean }) => {
+  const TreeNode = ({ member, isRoot = false }: { member: TeamMember; isRoot?: boolean }) => {
     const hasChildren = member.children && member.children.length > 0;
     const isExpanded = expandedNodes.has(member.userId);
 
     return (
-      <div className="relative">
-        <div className="flex items-center">
-          {/* Branch lines */}
-          {!isRoot && (
-            <div className="relative mr-4">
-              <div className="w-6 h-6 border-l-2 border-b-2 border-gray-300 rounded-bl-lg"></div>
-              {!isLast && (
-                <div className="absolute top-6 left-0 w-0.5 h-8 bg-gray-300"></div>
-              )}
-            </div>
-          )}
-
+      <div className="flex flex-col items-center">
+        {/* Node */}
+        <div className="flex flex-col items-center relative">
           {/* Expand/Collapse button */}
-          {hasChildren && (
+          {hasChildren && !isRoot && (
             <Button
               variant="ghost"
               size="sm"
-              className="w-6 h-6 p-0 mr-2"
+              className="w-6 h-6 p-0 mb-1 absolute -top-8 z-10"
               onClick={() => toggleNode(member.userId)}
             >
               {isExpanded ? (
@@ -128,27 +117,27 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
           {/* Member card */}
           <div 
             className={`
-              p-3 rounded-lg border cursor-pointer transition-all hover:shadow-lg min-w-[140px] mb-2
+              p-3 rounded-xl border cursor-pointer transition-all hover:shadow-lg min-w-[160px] relative
               ${isRoot 
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-300' 
-                : 'bg-white border-gray-200 hover:bg-gray-50'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-300 shadow-xl' 
+                : 'bg-white border-gray-200 hover:bg-gray-50 shadow-md'
               }
             `}
           >
             <div className="text-center space-y-2">
               {/* Profile Picture */}
-              <div className="w-12 h-12 mx-auto">
+              <div className="w-14 h-14 mx-auto relative">
                 {member.profileImage ? (
                   <img 
                     src={member.profileImage} 
                     alt={member.name}
-                    className="w-12 h-12 rounded-full object-cover border-2 border-white shadow-md"
+                    className="w-14 h-14 rounded-full object-cover border-3 border-white shadow-lg"
                   />
                 ) : (
-                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                    isRoot ? 'bg-white/20' : 'bg-gray-200'
+                  <div className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg ${
+                    isRoot ? 'bg-white/20 border-3 border-white' : 'bg-gray-200 border-2 border-gray-300'
                   }`}>
-                    <UserIcon className={`h-6 w-6 ${isRoot ? 'text-white' : 'text-gray-600'}`} />
+                    <UserIcon className={`h-7 w-7 ${isRoot ? 'text-white' : 'text-gray-600'}`} />
                   </div>
                 )}
               </div>
@@ -157,17 +146,17 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
                 <p className={`font-semibold text-sm ${isRoot ? 'text-white' : 'text-gray-900'}`}>
                   {member.name}
                 </p>
-                <p className={`text-xs ${isRoot ? 'text-blue-100' : 'text-gray-600'}`}>
+                <p className={`text-xs ${isRoot ? 'text-blue-100' : 'text-gray-600'} font-mono`}>
                   {member.userId}
                 </p>
                 {!isRoot && (
-                  <div className="mt-1 space-y-1">
-                    <Badge variant="outline" className="text-xs">
+                  <div className="mt-2 flex justify-center space-x-1">
+                    <Badge variant="outline" className="text-xs px-2">
                       L{member.level}
                     </Badge>
                     <Badge 
                       variant="outline" 
-                      className={`text-xs ml-1 ${
+                      className={`text-xs px-2 ${
                         member.side === 'left' 
                           ? 'bg-green-50 text-green-700 border-green-200' 
                           : 'bg-blue-50 text-blue-700 border-blue-200'
@@ -179,20 +168,46 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
                 )}
               </div>
             </div>
+
+            {/* Expand button for root */}
+            {hasChildren && isRoot && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-6 h-6 p-0 absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white text-blue-600 border border-blue-200 rounded-full"
+                onClick={() => toggleNode(member.userId)}
+              >
+                {isExpanded ? (
+                  <ChevronDown className="h-4 w-4" />
+                ) : (
+                  <ChevronRight className="h-4 w-4" />
+                )}
+              </Button>
+            )}
           </div>
+
+          {/* Connecting line down */}
+          {hasChildren && isExpanded && (
+            <div className="w-0.5 h-8 bg-gray-300 mt-2"></div>
+          )}
         </div>
 
-        {/* Children */}
+        {/* Children - Horizontal Layout */}
         {hasChildren && isExpanded && (
-          <div className="ml-8 mt-2">
-            {member.children!.map((child, index) => (
-              <div key={child.userId} className="relative">
-                <TreeNode 
-                  member={child} 
-                  isLast={index === member.children!.length - 1}
-                />
-              </div>
-            ))}
+          <div className="flex flex-col items-center mt-4">
+            {/* Horizontal line */}
+            <div className="w-full h-0.5 bg-gray-300 mb-4"></div>
+            
+            {/* Children nodes */}
+            <div className="flex flex-wrap justify-center gap-8">
+              {member.children!.map((child, index) => (
+                <div key={child.userId} className="flex flex-col items-center">
+                  {/* Vertical line up to child */}
+                  <div className="w-0.5 h-6 bg-gray-300 mb-2"></div>
+                  <TreeNode member={child} />
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -240,7 +255,7 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="text-gray-900">Team Tree View</CardTitle>
-              <CardDescription>Hierarchical view of your referral network (up to 10 levels)</CardDescription>
+              <CardDescription>Horizontal view of your referral network (up to 10 levels)</CardDescription>
             </div>
             <div className="flex space-x-2">
               <Button variant="outline" size="sm" onClick={collapseAll}>
@@ -259,8 +274,8 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-auto p-6 bg-gray-50 rounded-lg border border-gray-200">
-            <div className="min-w-max">
+          <div className="overflow-auto p-8 bg-gray-50 rounded-lg border border-gray-200">
+            <div className="min-w-max flex justify-center">
               <TreeNode member={treeData} isRoot={true} />
             </div>
           </div>
@@ -269,7 +284,7 @@ const TreeViewTab = ({ user }: TreeViewTabProps) => {
             <h4 className="font-semibold text-blue-800 mb-2">Tree View Instructions:</h4>
             <ul className="text-sm text-blue-700 space-y-1">
               <li>• Click expand/collapse buttons to navigate the tree structure</li>
-              <li>• The tree shows your complete referral network up to 10 levels</li>
+              <li>• The tree shows your complete referral network up to 10 levels horizontally</li>
               <li>• L/R badges indicate left and right sides of the binary tree</li>
               <li>• Profile pictures are displayed for visual identification</li>
               <li>• Use zoom controls and expand/collapse for better navigation</li>

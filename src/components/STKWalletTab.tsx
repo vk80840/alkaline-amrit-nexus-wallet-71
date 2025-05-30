@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { TrendingUp, ArrowUp, ArrowDown, Star, Lock, Calendar } from 'lucide-react';
+import { TrendingUp, ArrowUp, ArrowDown, Star, Lock, Calendar, Shield, Info } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface STKWalletTabProps {
@@ -115,96 +114,134 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'available':
-        return 'bg-green-100 text-green-800';
+        return 'bg-green-100 text-green-800 border-green-200';
       case 'locked':
-        return 'bg-red-100 text-red-800';
+        return 'bg-red-100 text-red-800 border-red-200';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
   return (
     <div className="space-y-6">
       {/* STK Lock Policy Notice */}
-      <Card className="bg-yellow-50 border-yellow-200">
-        <CardHeader>
-          <CardTitle className="flex items-center text-yellow-800">
-            <Lock className="mr-2 h-5 w-5" />
-            STK Lock Policy (15-Month Lock Period)
+      <Card className="border-l-4 border-l-amber-500 bg-gradient-to-r from-amber-50 to-yellow-50 shadow-lg">
+        <CardHeader className="pb-3">
+          <CardTitle className="flex items-center text-amber-800">
+            <Shield className="mr-3 h-6 w-6" />
+            STK Lock Policy - 15 Month Security Period
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ul className="text-sm text-yellow-700 space-y-2">
-            <li>• ALL STK from ANY source is automatically locked for 15 months</li>
-            <li>• This includes STK purchased with main balance, rewards, referrals, bonuses, and any other source</li>
-            <li>• Locked STK cannot be sold, transferred, or traded during the lock period</li>
-            <li>• Locked STK will automatically become available after exactly 15 months from the date received</li>
-            <li>• Lock period ensures long-term commitment and ecosystem stability</li>
-          </ul>
+          <div className="bg-white/70 rounded-lg p-4 border border-amber-200">
+            <div className="flex items-start space-x-3">
+              <Info className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <h4 className="font-semibold text-amber-800 mb-2">Universal Lock Mechanism</h4>
+                <ul className="text-sm text-amber-700 space-y-2">
+                  <li className="flex items-start">
+                    <span className="font-medium mr-2">•</span>
+                    <span><strong>ALL STK from ANY source</strong> is automatically locked for exactly 15 months</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium mr-2">•</span>
+                    <span>Includes: purchased STK, rewards, referral bonuses, level bonuses, and any other source</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium mr-2">•</span>
+                    <span>Locked STK cannot be sold, transferred, or traded during the lock period</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium mr-2">•</span>
+                    <span>STK automatically becomes available after exactly 15 months from date received</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="font-medium mr-2">•</span>
+                    <span>This policy ensures long-term commitment and ecosystem stability</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
 
       {/* STK Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-br from-yellow-500/20 to-orange-500/20 backdrop-blur-lg border-white/30">
-          <CardContent className="p-4 text-center">
-            <Star className="mx-auto h-8 w-8 text-yellow-500 mb-2" />
-            <p className="text-sm text-gray-600">Available STK</p>
-            <p className="text-xl font-bold">{stkData.availableSTK.toLocaleString()}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="bg-gradient-to-br from-yellow-400 via-yellow-500 to-amber-500 text-white shadow-xl">
+          <CardContent className="p-6 text-center">
+            <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+              <Star className="h-8 w-8" />
+            </div>
+            <p className="text-yellow-100 text-sm font-medium">Available STK</p>
+            <p className="text-2xl font-bold">{stkData.availableSTK.toLocaleString()}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-red-500/20 to-orange-500/20 backdrop-blur-lg border-white/30">
-          <CardContent className="p-4 text-center">
-            <Lock className="mx-auto h-8 w-8 text-red-500 mb-2" />
-            <p className="text-sm text-gray-600">Locked STK</p>
-            <p className="text-xl font-bold">{stkData.lockedSTK.toLocaleString()}</p>
+        <Card className="bg-gradient-to-br from-red-500 via-red-600 to-red-700 text-white shadow-xl">
+          <CardContent className="p-6 text-center">
+            <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+              <Lock className="h-8 w-8" />
+            </div>
+            <p className="text-red-100 text-sm font-medium">Locked STK</p>
+            <p className="text-2xl font-bold">{stkData.lockedSTK.toLocaleString()}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-green-500/20 to-blue-500/20 backdrop-blur-lg border-white/30">
-          <CardContent className="p-4 text-center">
-            <TrendingUp className="mx-auto h-8 w-8 text-green-500 mb-2" />
-            <p className="text-sm text-gray-600">Current Price</p>
-            <p className="text-xl font-bold">₹{stkData.currentPrice}</p>
+        <Card className="bg-gradient-to-br from-green-500 via-green-600 to-emerald-600 text-white shadow-xl">
+          <CardContent className="p-6 text-center">
+            <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+              <TrendingUp className="h-8 w-8" />
+            </div>
+            <p className="text-green-100 text-sm font-medium">Current Price</p>
+            <p className="text-2xl font-bold">₹{stkData.currentPrice}</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-blue-500/20 to-purple-500/20 backdrop-blur-lg border-white/30">
-          <CardContent className="p-4 text-center">
-            <TrendingUp className="mx-auto h-8 w-8 text-blue-500 mb-2" />
-            <p className="text-sm text-gray-600">Available Value</p>
-            <p className="text-xl font-bold">₹{stkData.availableValue.toLocaleString()}</p>
+        <Card className="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-600 text-white shadow-xl">
+          <CardContent className="p-6 text-center">
+            <div className="bg-white/20 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+              <TrendingUp className="h-8 w-8" />
+            </div>
+            <p className="text-blue-100 text-sm font-medium">Available Value</p>
+            <p className="text-2xl font-bold">₹{stkData.availableValue.toLocaleString()}</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Buy/Sell Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card className="bg-white/60 backdrop-blur-lg border-white/30 shadow-xl">
-          <CardHeader>
-            <CardTitle className="flex items-center text-green-600">
-              <ArrowDown className="mr-2 h-5 w-5" />
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <Card className="shadow-xl border-0 bg-gradient-to-br from-green-50 to-emerald-50">
+          <CardHeader className="bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-t-lg">
+            <CardTitle className="flex items-center">
+              <div className="bg-white/20 rounded-full p-2 mr-3">
+                <ArrowDown className="h-5 w-5" />
+              </div>
               Buy STK
             </CardTitle>
-            <CardDescription>Purchase STK using your main balance (15-month lock applies)</CardDescription>
+            <CardDescription className="text-green-100">Purchase STK using your main balance</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-3 bg-green-50 rounded-lg">
-              <p className="text-sm text-green-700">
-                Available Balance: ₹{user.mainBalance.toLocaleString()}
+          <CardContent className="p-6 space-y-4">
+            <div className="p-4 bg-green-100 rounded-lg border border-green-200">
+              <p className="text-sm text-green-800 font-medium">
+                💰 Available Balance: ₹{user.mainBalance.toLocaleString()}
               </p>
             </div>
 
-            <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-              <p className="text-xs text-yellow-700 flex items-center">
-                <Lock className="h-3 w-3 mr-1" />
-                STK will be locked for 15 months from purchase date
+            <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
+              <div className="flex items-center">
+                <Lock className="h-4 w-4 text-amber-600 mr-2" />
+                <p className="text-sm text-amber-700 font-medium">
+                  15-Month Lock Period Applies
+                </p>
+              </div>
+              <p className="text-xs text-amber-600 mt-1">
+                All purchased STK will be locked for exactly 15 months
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="buyAmount">STK Amount</Label>
+              <Label htmlFor="buyAmount" className="text-sm font-semibold">STK Amount</Label>
               <Input
                 id="buyAmount"
                 type="number"
@@ -212,41 +249,47 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
                 value={buyAmount}
                 onChange={(e) => setBuyAmount(e.target.value)}
                 min="1"
+                className="text-lg"
               />
               {buyAmount && (
-                <p className="text-sm text-gray-600">
-                  Total Cost: ₹{(Number(buyAmount) * stkData.currentPrice).toLocaleString()}
-                </p>
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-700">
+                    Total Cost: <span className="font-bold text-lg">₹{(Number(buyAmount) * stkData.currentPrice).toLocaleString()}</span>
+                  </p>
+                </div>
               )}
             </div>
 
             <Button 
               onClick={handleBuySTK}
-              className="w-full bg-gradient-to-r from-green-500 to-green-600"
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 py-3 text-lg"
               disabled={!buyAmount || Number(buyAmount) * stkData.currentPrice > user.mainBalance}
             >
+              <Lock className="mr-2 h-5 w-5" />
               Buy STK (15-Month Lock)
             </Button>
           </CardContent>
         </Card>
 
-        <Card className="bg-white/60 backdrop-blur-lg border-white/30 shadow-xl">
-          <CardHeader>
-            <CardTitle className="flex items-center text-red-600">
-              <ArrowUp className="mr-2 h-5 w-5" />
+        <Card className="shadow-xl border-0 bg-gradient-to-br from-red-50 to-rose-50">
+          <CardHeader className="bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-t-lg">
+            <CardTitle className="flex items-center">
+              <div className="bg-white/20 rounded-full p-2 mr-3">
+                <ArrowUp className="h-5 w-5" />
+              </div>
               Sell STK
             </CardTitle>
-            <CardDescription>Sell your available (unlocked) STK for main balance</CardDescription>
+            <CardDescription className="text-red-100">Sell your available (unlocked) STK</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-3 bg-red-50 rounded-lg">
-              <p className="text-sm text-red-700">
-                Available STK: {stkData.availableSTK.toLocaleString()}
+          <CardContent className="p-6 space-y-4">
+            <div className="p-4 bg-red-100 rounded-lg border border-red-200">
+              <p className="text-sm text-red-800 font-medium">
+                🔓 Available STK: {stkData.availableSTK.toLocaleString()}
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="sellAmount">STK Amount</Label>
+              <Label htmlFor="sellAmount" className="text-sm font-semibold">STK Amount</Label>
               <Input
                 id="sellAmount"
                 type="number"
@@ -255,19 +298,23 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
                 onChange={(e) => setSellAmount(e.target.value)}
                 min="1"
                 max={stkData.availableSTK}
+                className="text-lg"
               />
               {sellAmount && (
-                <p className="text-sm text-gray-600">
-                  You'll receive: ₹{(Number(sellAmount) * stkData.currentPrice).toLocaleString()}
-                </p>
+                <div className="p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-700">
+                    You'll receive: <span className="font-bold text-lg">₹{(Number(sellAmount) * stkData.currentPrice).toLocaleString()}</span>
+                  </p>
+                </div>
               )}
             </div>
 
             <Button 
               onClick={handleSellSTK}
-              className="w-full bg-gradient-to-r from-red-500 to-red-600"
+              className="w-full bg-gradient-to-r from-red-500 to-rose-600 hover:from-red-600 hover:to-rose-700 py-3 text-lg"
               disabled={!sellAmount || Number(sellAmount) > stkData.availableSTK}
             >
+              <ArrowUp className="mr-2 h-5 w-5" />
               Sell STK
             </Button>
           </CardContent>
@@ -275,49 +322,57 @@ const STKWalletTab = ({ user }: STKWalletTabProps) => {
       </div>
 
       {/* STK Transaction History */}
-      <Card className="bg-white/60 backdrop-blur-lg border-white/30 shadow-xl">
+      <Card className="shadow-xl">
         <CardHeader>
-          <CardTitle>STK Transaction History</CardTitle>
-          <CardDescription>Your STK trading and reward history with lock status</CardDescription>
+          <CardTitle className="text-xl">STK Transaction History</CardTitle>
+          <CardDescription>Your complete STK trading and reward history with lock status</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+          <div className="space-y-3">
             {stkTransactions.map((transaction) => (
               <div 
                 key={transaction.id}
-                className="flex items-center justify-between p-3 bg-white/50 rounded-lg border border-white/20"
+                className="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
               >
-                <div className="flex items-center space-x-3">
-                  {getTransactionIcon(transaction.type)}
+                <div className="flex items-center space-x-4">
+                  <div className="p-2 rounded-full bg-gray-100">
+                    {getTransactionIcon(transaction.type)}
+                  </div>
                   <div>
-                    <p className="font-medium capitalize">
+                    <p className="font-semibold capitalize text-gray-900">
                       {transaction.type.replace('-', ' ')}
                     </p>
                     <p className="text-sm text-gray-600">{transaction.source}</p>
-                    <p className="text-xs text-gray-500">{transaction.date}</p>
+                    <p className="text-xs text-gray-500 flex items-center">
+                      <Calendar className="h-3 w-3 mr-1" />
+                      {transaction.date}
+                    </p>
                     {transaction.status === 'locked' && (
-                      <p className="text-xs text-red-600 flex items-center">
-                        <Calendar className="h-3 w-3 mr-1" />
+                      <p className="text-xs text-red-600 flex items-center mt-1">
+                        <Lock className="h-3 w-3 mr-1" />
                         Unlocks: {transaction.lockUntil}
                       </p>
                     )}
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold">
+                  <p className="font-bold text-lg text-gray-900">
                     {transaction.amount.toLocaleString()} STK
                   </p>
                   <p className="text-sm text-gray-600">
                     @ ₹{transaction.price} = ₹{transaction.total.toLocaleString()}
                   </p>
-                  <Badge className={`mt-1 ${getStatusColor(transaction.status)}`}>
+                  <Badge className={`mt-2 ${getStatusColor(transaction.status)}`}>
                     {transaction.status === 'locked' ? (
                       <span className="flex items-center">
                         <Lock className="h-3 w-3 mr-1" />
                         Locked
                       </span>
                     ) : (
-                      'Available'
+                      <span className="flex items-center">
+                        <Star className="h-3 w-3 mr-1" />
+                        Available
+                      </span>
                     )}
                   </Badge>
                 </div>

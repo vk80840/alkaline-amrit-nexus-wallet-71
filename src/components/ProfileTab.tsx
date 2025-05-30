@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { User } from '../types/user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { User as UserIcon, MapPin, CreditCard, FileText } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { User as UserIcon, MapPin, CreditCard, FileText, Copy } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface ProfileTabProps {
@@ -18,6 +18,8 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [profileData, setProfileData] = useState({
     name: user.name,
+    referralCode: user.referralCode,
+    preferredSide: 'left',
     walletAddress: 'wallet123456789',
     currentPassword: '',
     newPassword: '',
@@ -40,12 +42,15 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
     ifscCode: '',
     bankName: '',
     branch: '',
+    upiId: '',
+    paymentMethod: 'bank',
   });
 
   const [kycData, setKycData] = useState({
     panNumber: '',
     aadharNumber: '',
     panImage: null,
+    panImageBack: null,
     aadharFront: null,
     aadharBack: null,
   });
@@ -76,6 +81,14 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
     toast({
       title: "KYC Submitted",
       description: "Your KYC documents have been submitted for verification.",
+    });
+  };
+
+  const copyReferralCode = () => {
+    navigator.clipboard.writeText(profileData.referralCode);
+    toast({
+      title: "Copied!",
+      description: "Referral code copied to clipboard",
     });
   };
 
@@ -159,12 +172,34 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
 
                 <div className="space-y-2">
                   <Label htmlFor="referralCode">Referral Code</Label>
-                  <Input
-                    id="referralCode"
-                    value={user.referralCode}
-                    disabled
-                    className="bg-gray-100"
-                  />
+                  <div className="flex space-x-2">
+                    <Input
+                      id="referralCode"
+                      value={profileData.referralCode}
+                      onChange={(e) => setProfileData({...profileData, referralCode: e.target.value})}
+                      disabled={!isEditing}
+                    />
+                    <Button variant="outline" size="sm" onClick={copyReferralCode}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="preferredSide">Preferred Side</Label>
+                  <Select 
+                    value={profileData.preferredSide} 
+                    onValueChange={(value) => setProfileData({...profileData, preferredSide: value})}
+                    disabled={!isEditing}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select side" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="left">Left</SelectItem>
+                      <SelectItem value="right">Right</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-2">
@@ -321,55 +356,83 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
               <CardDescription>Manage your banking information for withdrawals</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="accountHolder">Account Holder Name</Label>
-                  <Input
-                    id="accountHolder"
-                    value={bankData.accountHolder}
-                    onChange={(e) => setBankData({...bankData, accountHolder: e.target.value})}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="accountNumber">Account Number</Label>
-                  <Input
-                    id="accountNumber"
-                    value={bankData.accountNumber}
-                    onChange={(e) => setBankData({...bankData, accountNumber: e.target.value})}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="ifscCode">IFSC Code</Label>
-                  <Input
-                    id="ifscCode"
-                    value={bankData.ifscCode}
-                    onChange={(e) => setBankData({...bankData, ifscCode: e.target.value})}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="bankName">Bank Name</Label>
-                  <Input
-                    id="bankName"
-                    value={bankData.bankName}
-                    onChange={(e) => setBankData({...bankData, bankName: e.target.value})}
-                  />
-                </div>
-
-                <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="branch">Branch</Label>
-                  <Input
-                    id="branch"
-                    value={bankData.branch}
-                    onChange={(e) => setBankData({...bankData, branch: e.target.value})}
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label>Payment Method</Label>
+                <Select 
+                  value={bankData.paymentMethod} 
+                  onValueChange={(value) => setBankData({...bankData, paymentMethod: value})}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bank">Bank Transfer</SelectItem>
+                    <SelectItem value="upi">UPI</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
+              {bankData.paymentMethod === 'bank' ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="accountHolder">Account Holder Name</Label>
+                    <Input
+                      id="accountHolder"
+                      value={bankData.accountHolder}
+                      onChange={(e) => setBankData({...bankData, accountHolder: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="accountNumber">Account Number</Label>
+                    <Input
+                      id="accountNumber"
+                      value={bankData.accountNumber}
+                      onChange={(e) => setBankData({...bankData, accountNumber: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="ifscCode">IFSC Code</Label>
+                    <Input
+                      id="ifscCode"
+                      value={bankData.ifscCode}
+                      onChange={(e) => setBankData({...bankData, ifscCode: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bankName">Bank Name</Label>
+                    <Input
+                      id="bankName"
+                      value={bankData.bankName}
+                      onChange={(e) => setBankData({...bankData, bankName: e.target.value})}
+                    />
+                  </div>
+
+                  <div className="space-y-2 md:col-span-2">
+                    <Label htmlFor="branch">Branch</Label>
+                    <Input
+                      id="branch"
+                      value={bankData.branch}
+                      onChange={(e) => setBankData({...bankData, branch: e.target.value})}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="upiId">UPI ID</Label>
+                  <Input
+                    id="upiId"
+                    value={bankData.upiId}
+                    onChange={(e) => setBankData({...bankData, upiId: e.target.value})}
+                    placeholder="yourname@paytm"
+                  />
+                </div>
+              )}
+
               <Button onClick={handleBankUpdate} className="w-full md:w-auto">
-                Save Bank Details
+                Save {bankData.paymentMethod === 'bank' ? 'Bank' : 'UPI'} Details
               </Button>
             </CardContent>
           </Card>
@@ -407,11 +470,21 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="panImage">PAN Card Image</Label>
+                  <Label htmlFor="panImage">PAN Card Front</Label>
                   <Input
                     id="panImage"
+                    type="file"
+                    accept="image/*"
+                    className="cursor-pointer"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="panImageBack">PAN Card Back</Label>
+                  <Input
+                    id="panImageBack"
                     type="file"
                     accept="image/*"
                     className="cursor-pointer"
@@ -445,6 +518,7 @@ const ProfileTab = ({ user }: ProfileTabProps) => {
                   <li>• Ensure all documents are clear and readable</li>
                   <li>• Upload images in JPG, PNG format (max 2MB each)</li>
                   <li>• All details must match your profile information</li>
+                  <li>• Upload both front and back of PAN card and Aadhaar</li>
                   <li>• KYC verification may take 2-3 business days</li>
                 </ul>
               </div>

@@ -248,6 +248,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    let timeoutId: NodeJS.Timeout;
+    
+    // Set a timeout to prevent infinite loading
+    timeoutId = setTimeout(() => {
+      if (mounted && loading) {
+        console.warn('Auth initialization timeout');
+        setLoading(false);
+        setError('Authentication timeout. Please refresh the page.');
+      }
+    }, 10000); // 10 second timeout
     
     const initAuth = async () => {
       try {
@@ -272,9 +282,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             await fetchUserData(session.user.id);
           } catch (error) {
             console.error('Initial user data fetch failed:', error);
-            // Don't set error here if we have cached data
-            if (!profile || !wallet) {
-              setError('Failed to load user data. Please try refreshing.');
+            // If we have cached data, use it; otherwise show error
+            const cachedProfile = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
+            const cachedWallet = localStorage.getItem(STORAGE_KEYS.USER_WALLET);
+            
+            if (!cachedProfile || !cachedWallet) {
+              setError('Failed to load user data. Please try again.');
             }
           }
         } else {
@@ -293,6 +306,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (mounted) {
           setAuthInitialized(true);
           setLoading(false);
+          clearTimeout(timeoutId);
         }
       }
     };
@@ -335,20 +349,33 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       mounted = false;
+      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
 
-  // Additional effect to handle loading state more precisely
+  // Simplified loading state management
   useEffect(() => {
+    console.log('Auth state:', { authInitialized, user: !!user, profile: !!profile, wallet: !!wallet, error: !!error, loading });
+    
     if (authInitialized) {
-      // Only stop loading if we have auth state determined
-      if (user === null || (user && profile && wallet)) {
+      // If no user, stop loading
+      if (user === null) {
+        console.log('No user found, stopping loading');
         setLoading(false);
-      } else if (user && (!profile || !wallet) && !error) {
-        // We have a user but missing profile/wallet data, keep loading
-        setLoading(true);
       }
+      // If user exists and we have both profile and wallet, stop loading
+      else if (user && profile && wallet) {
+        console.log('User authenticated with complete data, stopping loading');
+        setLoading(false);
+      }
+      // If there's an error, stop loading
+      else if (error) {
+        console.log('Error detected, stopping loading');
+        setLoading(false);
+      }
+      // If user exists but we're still fetching data and no error, keep loading
+      // This will be handled by the fetchUserData function
     }
   }, [user, profile, wallet, authInitialized, error]);
 

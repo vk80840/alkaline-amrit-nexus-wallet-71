@@ -24,6 +24,9 @@ const AppContent = () => {
           <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-700 mb-2">Loading...</h2>
           <p className="text-gray-500">Please wait while we set up your account</p>
+          <div className="mt-4 text-sm text-gray-400">
+            {user ? 'Loading user data...' : 'Checking authentication...'}
+          </div>
         </div>
       </div>
     );

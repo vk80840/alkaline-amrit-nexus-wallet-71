@@ -108,7 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const fetchUserData = async (userId: string, retryCount = 0): Promise<{ profile: Profile | null, wallet: Wallet | null }> => {
-    const MAX_RETRIES = 3;
+    const MAX_RETRIES = 2;
     
     try {
       setError(null);
@@ -154,18 +154,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (retryCount < MAX_RETRIES) {
         console.log(`Retrying fetch user data (${retryCount + 1}/${MAX_RETRIES})`);
-        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Exponential backoff
+        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
         return fetchUserData(userId, retryCount + 1);
       }
       
       setError(error.message || 'Failed to load user data');
-      
-      // If we have cached data and fetch fails, keep using cached data
-      if (profile && wallet) {
-        console.log('Using cached user data due to fetch failure');
-        return { profile, wallet };
-      }
-      
       throw error;
     }
   };
@@ -196,71 +189,94 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signIn = async (email: string, password: string) => {
     setError(null);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
+    setLoading(true);
+    
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ 
+        email, 
+        password 
+      });
+      
+      if (error) throw error;
+      
+      // Don't set loading to false here - let the auth state change handler do it
+      console.log('Sign in successful, waiting for auth state change...');
+    } catch (error: any) {
+      setLoading(false);
+      setError(error.message);
+      throw error;
+    }
   };
 
   const signUp = async (email: string, password: string, name: string, mobile: string, sponsorCode?: string) => {
     setError(null);
-    let sponsor = null;
+    setLoading(true);
     
-    // If sponsor code is provided, find the sponsor
-    if (sponsorCode) {
-      const { data: sponsorData } = await supabase
-        .from('profiles')
-        .select('id, name')
-        .eq('referral_code', sponsorCode)
-        .single();
+    try {
+      let sponsor = null;
       
-      if (sponsorData) {
-        sponsor = sponsorData;
-      }
-    }
-
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-          mobile,
-          sponsor_id: sponsor?.id,
-          sponsor_name: sponsor?.name,
+      // If sponsor code is provided, find the sponsor
+      if (sponsorCode) {
+        const { data: sponsorData } = await supabase
+          .from('profiles')
+          .select('id, name')
+          .eq('referral_code', sponsorCode)
+          .single();
+        
+        if (sponsorData) {
+          sponsor = sponsorData;
         }
       }
-    });
-    
-    if (error) throw error;
+
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+            mobile,
+            sponsor_id: sponsor?.id,
+            sponsor_name: sponsor?.name,
+          }
+        }
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      setLoading(false);
+      setError(error.message);
+      throw error;
+    }
   };
 
   const signOut = async () => {
     setError(null);
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    setLoading(true);
     
-    // Clear state and cache
-    setUser(null);
-    setProfile(null);
-    setWallet(null);
-    cacheUserData(null, null);
-    localStorage.removeItem(STORAGE_KEYS.AUTH_STATE);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      // Clear state and cache
+      setUser(null);
+      setProfile(null);
+      setWallet(null);
+      cacheUserData(null, null);
+      localStorage.removeItem(STORAGE_KEYS.AUTH_STATE);
+    } catch (error: any) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
-    
-    // Set a timeout to prevent infinite loading
-    timeoutId = setTimeout(() => {
-      if (mounted && loading) {
-        console.warn('Auth initialization timeout');
-        setLoading(false);
-        setError('Authentication timeout. Please refresh the page.');
-      }
-    }, 10000); // 10 second timeout
     
     const initAuth = async () => {
       try {
+        console.log('Initializing auth...');
+        
         // Load cached data first for faster UI
         loadCachedData();
         
@@ -276,21 +292,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (!mounted) return;
 
         if (session?.user) {
+          console.log('Found existing session for user:', session.user.id);
           setUser(session.user);
           
           try {
             await fetchUserData(session.user.id);
+            console.log('User data fetched successfully');
           } catch (error) {
             console.error('Initial user data fetch failed:', error);
-            // If we have cached data, use it; otherwise show error
+            // Try to use cached data if available
             const cachedProfile = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
             const cachedWallet = localStorage.getItem(STORAGE_KEYS.USER_WALLET);
             
             if (!cachedProfile || !cachedWallet) {
-              setError('Failed to load user data. Please try again.');
+              setError('Failed to load user data. Please try signing in again.');
             }
           }
         } else {
+          console.log('No existing session found');
           // No session, clear everything
           setUser(null);
           setProfile(null);
@@ -306,7 +325,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (mounted) {
           setAuthInitialized(true);
           setLoading(false);
-          clearTimeout(timeoutId);
+          console.log('Auth initialization complete');
         }
       }
     };
@@ -318,30 +337,42 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       async (event, session) => {
         if (!mounted) return;
         
-        console.log('Auth state changed:', event);
+        console.log('Auth state changed:', event, session?.user?.id);
         
-        if (event === 'SIGNED_OUT') {
-          setUser(null);
-          setProfile(null);
-          setWallet(null);
-          cacheUserData(null, null);
-          setError(null);
-        } else if (session?.user) {
-          setUser(session.user);
-          
-          if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-            try {
-              await fetchUserData(session.user.id);
-            } catch (error) {
-              console.error('Auth state change user data fetch failed:', error);
-              if (!profile || !wallet) {
-                setError('Failed to load user data. Please try refreshing.');
+        try {
+          if (event === 'SIGNED_OUT') {
+            console.log('User signed out');
+            setUser(null);
+            setProfile(null);
+            setWallet(null);
+            cacheUserData(null, null);
+            setError(null);
+            setLoading(false);
+          } else if (session?.user) {
+            console.log('User session detected:', session.user.id);
+            setUser(session.user);
+            
+            if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+              console.log('Fetching user data for event:', event);
+              try {
+                await fetchUserData(session.user.id);
+                console.log('User data fetch completed');
+                setLoading(false);
+              } catch (error) {
+                console.error('Auth state change user data fetch failed:', error);
+                setLoading(false);
               }
             }
+          } else {
+            console.log('No user in session');
+            setUser(null);
+            setProfile(null);
+            setWallet(null);
+            setLoading(false);
           }
-        }
-        
-        if (authInitialized) {
+        } catch (error: any) {
+          console.error('Error in auth state change handler:', error);
+          setError(error.message);
           setLoading(false);
         }
       }
@@ -349,35 +380,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       mounted = false;
-      clearTimeout(timeoutId);
       subscription.unsubscribe();
     };
   }, []);
 
   // Simplified loading state management
   useEffect(() => {
-    console.log('Auth state:', { authInitialized, user: !!user, profile: !!profile, wallet: !!wallet, error: !!error, loading });
+    console.log('Auth state:', { 
+      authInitialized, 
+      user: !!user, 
+      profile: !!profile, 
+      wallet: !!wallet, 
+      error: !!error, 
+      loading 
+    });
     
-    if (authInitialized) {
-      // If no user, stop loading
-      if (user === null) {
-        console.log('No user found, stopping loading');
-        setLoading(false);
+    if (authInitialized && !loading) {
+      // Auth is initialized and not currently loading
+      if (user && (!profile || !wallet) && !error) {
+        // We have a user but missing data and no error - this shouldn't happen
+        // but if it does, try to fetch the data
+        console.log('User exists but missing profile/wallet data, attempting fetch');
+        fetchUserData(user.id).catch(console.error);
       }
-      // If user exists and we have both profile and wallet, stop loading
-      else if (user && profile && wallet) {
-        console.log('User authenticated with complete data, stopping loading');
-        setLoading(false);
-      }
-      // If there's an error, stop loading
-      else if (error) {
-        console.log('Error detected, stopping loading');
-        setLoading(false);
-      }
-      // If user exists but we're still fetching data and no error, keep loading
-      // This will be handled by the fetchUserData function
     }
-  }, [user, profile, wallet, authInitialized, error]);
+  }, [user, profile, wallet, authInitialized, error, loading]);
 
   return (
     <AuthContext.Provider value={{

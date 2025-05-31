@@ -12,7 +12,7 @@ interface Profile {
   referral_code: string;
   sponsor_id?: string;
   sponsor_name?: string;
-  preferred_side?: 'left' | 'right';
+  preferred_side?: 'left' | 'right' | null;
   join_date: string;
   kyc_status: 'pending' | 'verified' | 'rejected';
   rank: string;
@@ -45,13 +45,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Local storage keys
-const STORAGE_KEYS = {
-  USER_PROFILE: 'alkaline_user_profile',
-  USER_WALLET: 'alkaline_user_wallet',
-  AUTH_STATE: 'alkaline_auth_state'
-};
-
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === undefined) {
@@ -68,47 +61,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
   const [authInitialized, setAuthInitialized] = useState(false);
 
-  // Load cached data from localStorage
-  const loadCachedData = () => {
-    try {
-      const cachedProfile = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
-      const cachedWallet = localStorage.getItem(STORAGE_KEYS.USER_WALLET);
-      
-      if (cachedProfile) {
-        setProfile(JSON.parse(cachedProfile));
-      }
-      if (cachedWallet) {
-        setWallet(JSON.parse(cachedWallet));
-      }
-    } catch (error) {
-      console.error('Error loading cached data:', error);
-      // Clear corrupted cache
-      localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
-      localStorage.removeItem(STORAGE_KEYS.USER_WALLET);
-    }
-  };
-
-  // Save data to localStorage
-  const cacheUserData = (profileData: Profile | null, walletData: Wallet | null) => {
-    try {
-      if (profileData) {
-        localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(profileData));
-      } else {
-        localStorage.removeItem(STORAGE_KEYS.USER_PROFILE);
-      }
-      
-      if (walletData) {
-        localStorage.setItem(STORAGE_KEYS.USER_WALLET, JSON.stringify(walletData));
-      } else {
-        localStorage.removeItem(STORAGE_KEYS.USER_WALLET);
-      }
-    } catch (error) {
-      console.error('Error caching user data:', error);
-    }
-  };
-
   const fetchUserData = async (userId: string, retryCount = 0): Promise<{ profile: Profile | null, wallet: Wallet | null }> => {
-    const MAX_RETRIES = 2;
+    const MAX_RETRIES = 3;
     
     try {
       setError(null);
@@ -121,12 +75,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (profileError) {
+        console.error('Profile fetch error:', profileError);
         throw new Error(`Profile fetch error: ${profileError.message}`);
       }
 
       if (!profileData) {
         throw new Error('Profile not found');
       }
+
+      // Ensure preferred_side is properly typed
+      const typedProfile: Profile = {
+        ...profileData,
+        preferred_side: profileData.preferred_side as 'left' | 'right' | null
+      };
 
       // Fetch wallet
       const { data: walletData, error: walletError } = await supabase
@@ -136,6 +97,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         .single();
 
       if (walletError) {
+        console.error('Wallet fetch error:', walletError);
         throw new Error(`Wallet fetch error: ${walletError.message}`);
       }
 
@@ -143,18 +105,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         throw new Error('Wallet not found');
       }
 
-      // Update state and cache
-      setProfile(profileData);
+      // Update state
+      setProfile(typedProfile);
       setWallet(walletData);
-      cacheUserData(profileData, walletData);
       
-      return { profile: profileData, wallet: walletData };
+      return { profile: typedProfile, wallet: walletData };
     } catch (error: any) {
       console.error('Error fetching user data:', error);
       
       if (retryCount < MAX_RETRIES) {
         console.log(`Retrying fetch user data (${retryCount + 1}/${MAX_RETRIES})`);
-        await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1)));
+        await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
         return fetchUserData(userId, retryCount + 1);
       }
       
@@ -199,7 +160,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       if (error) throw error;
       
-      // Don't set loading to false here - let the auth state change handler do it
       console.log('Sign in successful, waiting for auth state change...');
     } catch (error: any) {
       setLoading(false);
@@ -215,7 +175,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     try {
       let sponsor = null;
       
-      // If sponsor code is provided, find the sponsor
       if (sponsorCode) {
         const { data: sponsorData } = await supabase
           .from('profiles')
@@ -251,22 +210,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const signOut = async () => {
     setError(null);
-    setLoading(true);
     
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
-      // Clear state and cache
       setUser(null);
       setProfile(null);
       setWallet(null);
-      cacheUserData(null, null);
-      localStorage.removeItem(STORAGE_KEYS.AUTH_STATE);
     } catch (error: any) {
       setError(error.message);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -277,10 +230,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         console.log('Initializing auth...');
         
-        // Load cached data first for faster UI
-        loadCachedData();
-        
-        // Get initial session
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
@@ -300,21 +249,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             console.log('User data fetched successfully');
           } catch (error) {
             console.error('Initial user data fetch failed:', error);
-            // Try to use cached data if available
-            const cachedProfile = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
-            const cachedWallet = localStorage.getItem(STORAGE_KEYS.USER_WALLET);
-            
-            if (!cachedProfile || !cachedWallet) {
-              setError('Failed to load user data. Please try signing in again.');
-            }
           }
         } else {
           console.log('No existing session found');
-          // No session, clear everything
           setUser(null);
           setProfile(null);
           setWallet(null);
-          cacheUserData(null, null);
         }
       } catch (error: any) {
         console.error('Auth initialization error:', error);
@@ -332,7 +272,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     initAuth();
 
-    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (!mounted) return;
@@ -345,7 +284,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setUser(null);
             setProfile(null);
             setWallet(null);
-            cacheUserData(null, null);
             setError(null);
             setLoading(false);
           } else if (session?.user) {
@@ -354,12 +292,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             
             if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
               console.log('Fetching user data for event:', event);
+              setLoading(true);
               try {
                 await fetchUserData(session.user.id);
                 console.log('User data fetch completed');
-                setLoading(false);
               } catch (error) {
                 console.error('Auth state change user data fetch failed:', error);
+              } finally {
                 setLoading(false);
               }
             }
@@ -383,28 +322,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       subscription.unsubscribe();
     };
   }, []);
-
-  // Simplified loading state management
-  useEffect(() => {
-    console.log('Auth state:', { 
-      authInitialized, 
-      user: !!user, 
-      profile: !!profile, 
-      wallet: !!wallet, 
-      error: !!error, 
-      loading 
-    });
-    
-    if (authInitialized && !loading) {
-      // Auth is initialized and not currently loading
-      if (user && (!profile || !wallet) && !error) {
-        // We have a user but missing data and no error - this shouldn't happen
-        // but if it does, try to fetch the data
-        console.log('User exists but missing profile/wallet data, attempting fetch');
-        fetchUserData(user.id).catch(console.error);
-      }
-    }
-  }, [user, profile, wallet, authInitialized, error, loading]);
 
   return (
     <AuthContext.Provider value={{

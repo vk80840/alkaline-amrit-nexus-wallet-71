@@ -1,99 +1,51 @@
 
 import { useState, useEffect } from 'react';
-import { User } from '../types/user';
+import { User, TeamStructure } from '../types/user';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, Award, Clock } from 'lucide-react';
+import { TrendingUp, Users, Target, Award } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
 
 interface BusinessVolumeTabProps {
   user: User;
 }
 
-interface TeamStructure {
-  id: string;
-  user_id: string;
-  sponsor_id?: string;
-  side?: 'left' | 'right';
-  level: number;
-  total_team: number;
-  direct_team: number;
-  left_team: number;
-  right_team: number;
-}
-
-interface BVTransaction {
-  id: string;
-  type: string;
-  amount: number;
-  created_at: string;
-  description: string;
-}
-
 const BusinessVolumeTab = ({ user }: BusinessVolumeTabProps) => {
   const [teamStructure, setTeamStructure] = useState<TeamStructure | null>(null);
-  const [bvTransactions, setBvTransactions] = useState<BVTransaction[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
-    fetchBusinessVolumeData();
+    fetchTeamStructure();
   }, [user.id]);
 
-  const fetchBusinessVolumeData = async () => {
+  const fetchTeamStructure = async () => {
     try {
-      // Fetch team structure
-      const { data: teamData, error: teamError } = await supabase
+      const { data, error } = await supabase
         .from('team_structure')
         .select('*')
         .eq('user_id', user.id)
         .single();
 
-      if (teamError && teamError.code !== 'PGRST116') throw teamError;
-      setTeamStructure(teamData);
+      if (error) {
+        console.error('Error fetching team structure:', error);
+        return;
+      }
 
-      // Fetch BV-related transactions
-      const { data: transactionData, error: transactionError } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .in('type', ['purchase', 'referral_bonus'])
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (transactionError) throw transactionError;
-      setBvTransactions(transactionData || []);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch business volume data",
-        variant: "destructive",
-      });
+      if (data) {
+        // Ensure side is properly typed
+        const typedData: TeamStructure = {
+          ...data,
+          side: data.side as 'left' | 'right' | undefined
+        };
+        setTeamStructure(typedData);
+      }
+    } catch (error) {
+      console.error('Error fetching team structure:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-
-  const getMonthlyBV = () => {
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    
-    return bvTransactions
-      .filter(transaction => {
-        const transactionDate = new Date(transaction.created_at);
-        return transactionDate.getMonth() === currentMonth && 
-               transactionDate.getFullYear() === currentYear;
-      })
-      .reduce((total, transaction) => total + Number(transaction.amount), 0);
   };
 
   if (loading) {
@@ -104,100 +56,198 @@ const BusinessVolumeTab = ({ user }: BusinessVolumeTabProps) => {
     );
   }
 
+  // Calculate BV targets and achievements
+  const currentBV = user.businessVolume;
+  const nextRankTarget = 50000; // Example target for next rank
+  const progress = (currentBV / nextRankTarget) * 100;
+
   return (
     <div className="space-y-6">
-      {/* BV Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="bg-white border border-gray-200 shadow-sm">
-          <CardContent className="p-4 text-center">
-            <TrendingUp className="mx-auto h-8 w-8 text-blue-600 mb-2" />
-            <p className="text-sm text-gray-600">Total BV</p>
-            <p className="text-xl font-bold text-gray-900">{user.businessVolume.toLocaleString()}</p>
+      {/* Overview Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Card className="bg-gradient-to-r from-blue-500/20 to-cyan-500/20 backdrop-blur-lg border-white/30 shadow-xl">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-blue-500/20 rounded-full">
+                <TrendingUp className="h-6 w-6 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Total BV</p>
+                <p className="text-2xl font-bold text-gray-900">{currentBV.toLocaleString()}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-gray-200 shadow-sm">
-          <CardContent className="p-4 text-center">
-            <Award className="mx-auto h-8 w-8 text-green-600 mb-2" />
-            <p className="text-sm text-gray-600">Total Team</p>
-            <p className="text-xl font-bold text-gray-900">{teamStructure?.total_team || 0}</p>
+        <Card className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 backdrop-blur-lg border-white/30 shadow-xl">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-green-500/20 rounded-full">
+                <Users className="h-6 w-6 text-green-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Team Size</p>
+                <p className="text-2xl font-bold text-gray-900">{teamStructure?.total_team || 0}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-gray-200 shadow-sm">
-          <CardContent className="p-4 text-center">
-            <TrendingUp className="mx-auto h-8 w-8 text-purple-600 mb-2" />
-            <p className="text-sm text-gray-600">Left Team</p>
-            <p className="text-xl font-bold text-gray-900">{teamStructure?.left_team || 0}</p>
+        <Card className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 backdrop-blur-lg border-white/30 shadow-xl">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-purple-500/20 rounded-full">
+                <Target className="h-6 w-6 text-purple-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Left Team</p>
+                <p className="text-2xl font-bold text-gray-900">{teamStructure?.left_team || 0}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-white border border-gray-200 shadow-sm">
-          <CardContent className="p-4 text-center">
-            <TrendingUp className="mx-auto h-8 w-8 text-orange-600 mb-2" />
-            <p className="text-sm text-gray-600">Right Team</p>
-            <p className="text-xl font-bold text-gray-900">{teamStructure?.right_team || 0}</p>
+        <Card className="bg-gradient-to-r from-orange-500/20 to-red-500/20 backdrop-blur-lg border-white/30 shadow-xl">
+          <CardContent className="p-6">
+            <div className="flex items-center space-x-4">
+              <div className="p-3 bg-orange-500/20 rounded-full">
+                <Award className="h-6 w-6 text-orange-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Right Team</p>
+                <p className="text-2xl font-bold text-gray-900">{teamStructure?.right_team || 0}</p>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Monthly Progress */}
-      <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="flex items-center text-gray-900">
-            <TrendingUp className="mr-2 h-5 w-5 text-blue-600" />
-            Monthly Progress
-          </CardTitle>
-          <CardDescription>Your BV accumulation this month</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">
-              {getMonthlyBV().toLocaleString()} BV
-            </div>
-            <p className="text-gray-600">Earned this month</p>
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid grid-cols-3 w-full bg-white/60 backdrop-blur-lg border border-white/20">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="targets">Targets</TabsTrigger>
+          <TabsTrigger value="analysis">Analysis</TabsTrigger>
+        </TabsList>
 
-      {/* BV History */}
-      <Card className="bg-white border border-gray-200 shadow-sm">
-        <CardHeader>
-          <CardTitle className="text-gray-900">BV History</CardTitle>
-          <CardDescription>Recent BV credits from your network</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {bvTransactions.length === 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              No BV transactions found.
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {bvTransactions.map((transaction) => (
-                <div 
-                  key={transaction.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
-                >
-                  <div className="flex items-center space-x-3">
-                    <Award className="h-5 w-5 text-blue-600" />
+        <TabsContent value="overview">
+          <Card className="bg-white/60 backdrop-blur-lg border-white/30 shadow-xl">
+            <CardHeader>
+              <CardTitle>Business Volume Overview</CardTitle>
+              <CardDescription>Your current business performance</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Progress to Next Rank</span>
+                  <span>{progress.toFixed(1)}%</span>
+                </div>
+                <Progress value={progress} className="h-2" />
+                <div className="flex justify-between text-sm text-gray-600">
+                  <span>Current: {currentBV.toLocaleString()} BV</span>
+                  <span>Target: {nextRankTarget.toLocaleString()} BV</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-blue-50 rounded-lg">
+                  <h4 className="font-semibold text-blue-900">Current Rank</h4>
+                  <p className="text-2xl font-bold text-blue-600">{user.rank}</p>
+                </div>
+                <div className="p-4 bg-green-50 rounded-lg">
+                  <h4 className="font-semibold text-green-900">Total Earnings</h4>
+                  <p className="text-2xl font-bold text-green-600">₹{user.referralBonus.toLocaleString()}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="targets">
+          <Card className="bg-white/60 backdrop-blur-lg border-white/30 shadow-xl">
+            <CardHeader>
+              <CardTitle>Rank Advancement Targets</CardTitle>
+              <CardDescription>Requirements for achieving higher ranks</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {[
+                  { rank: 'Silver', bv: 25000, team: 10, status: currentBV >= 25000 ? 'achieved' : 'pending' },
+                  { rank: 'Gold', bv: 50000, team: 25, status: currentBV >= 50000 ? 'achieved' : 'pending' },
+                  { rank: 'Platinum', bv: 100000, team: 50, status: currentBV >= 100000 ? 'achieved' : 'pending' },
+                  { rank: 'Diamond', bv: 250000, team: 100, status: currentBV >= 250000 ? 'achieved' : 'pending' },
+                ].map((target) => (
+                  <div key={target.rank} className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
-                      <p className="font-medium text-gray-900 capitalize">{transaction.type.replace('_', ' ')}</p>
-                      <p className="text-sm text-gray-600">{transaction.description}</p>
-                      <p className="text-xs text-gray-500">{formatDate(transaction.created_at)}</p>
+                      <h4 className="font-semibold">{target.rank}</h4>
+                      <p className="text-sm text-gray-600">
+                        {target.bv.toLocaleString()} BV • {target.team} Team Members
+                      </p>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-green-600">+{Number(transaction.amount).toLocaleString()}</p>
-                    <Badge variant="outline" className="text-xs">
-                      {transaction.type === 'purchase' ? 'Purchase' : 'Referral'}
+                    <Badge variant={target.status === 'achieved' ? 'default' : 'outline'}>
+                      {target.status === 'achieved' ? 'Achieved' : 'Pending'}
                     </Badge>
                   </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analysis">
+          <Card className="bg-white/60 backdrop-blur-lg border-white/30 shadow-xl">
+            <CardHeader>
+              <CardTitle>Performance Analysis</CardTitle>
+              <CardDescription>Detailed breakdown of your business metrics</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-semibold mb-2">Team Balance</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Left Team:</span>
+                        <span className="font-medium">{teamStructure?.left_team || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Right Team:</span>
+                        <span className="font-medium">{teamStructure?.right_team || 0}</span>
+                      </div>
+                      <div className="flex justify-between border-t pt-2">
+                        <span>Balance Ratio:</span>
+                        <span className="font-medium">
+                          {teamStructure ? 
+                            `${Math.min(teamStructure.left_team, teamStructure.right_team)}:${Math.max(teamStructure.left_team, teamStructure.right_team)}` 
+                            : '0:0'
+                          }
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 border rounded-lg">
+                    <h4 className="font-semibold mb-2">Growth Metrics</h4>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span>Direct Team:</span>
+                        <span className="font-medium">{teamStructure?.direct_team || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Total Team:</span>
+                        <span className="font-medium">{teamStructure?.total_team || 0}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Current Level:</span>
+                        <span className="font-medium">{teamStructure?.level || 1}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

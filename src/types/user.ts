@@ -96,3 +96,17 @@ export interface TeamMember {
   level: number;
   side?: 'left' | 'right';
 }
+
+export interface TeamStructure {
+  id: string;
+  user_id: string;
+  sponsor_id?: string;
+  side?: 'left' | 'right';
+  level: number;
+  path: string;
+  total_team: number;
+  direct_team: number;
+  left_team: number;
+  right_team: number;
+  created_at: string;
+}
